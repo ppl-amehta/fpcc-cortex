@@ -130,6 +130,15 @@
       <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
       <span>Stock Ledger</span>
     </button>
+    <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+      <span>Graph Reports</span>
+    </button>
+    <button onclick="switchTab('workflows')" id="tab-workflows" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="zap" class="w-4 h-4 text-yellow-400"></i>
+      <span>Recipes & Workflows</span>
+      <span id="activeRulesBadge" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">0</span>
+    </button>
   </nav>
 
   <!-- MAIN APP CONTAINER -->
@@ -1914,7 +1923,438 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
 
     </section>
 
+    <!-- ======================================================== -->
+    <!-- VIEW 13: UNIFIED GRAPH REPORTS & ANALYTICS (RIPPLING STYLE) -->
+    <!-- ======================================================== -->
+    <section id="view-reports" class="hidden space-y-6">
+      <!-- Title & Prebuilt Picker Header -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+              </span>
+              <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">Semantic Graph Reporting Engine</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Rippling-Style</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-400">Multi-hop traversal across 16 unified entity nodes with automatic topological joins & aggregations.</p>
+          </div>
+
+          <!-- Quick Actions & Prebuilt Selector -->
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="prebuiltReportSelect" onchange="onPrebuiltReportSelected()" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-slate-200 focus:ring-2 focus:ring-amber-500 max-w-xs truncate">
+              <!-- Populated dynamically with 8 reports -->
+            </select>
+            <button onclick="runSelectedPrebuiltReport()" class="px-4 py-2 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center gap-1.5 shadow-lg shadow-amber-600/25 transition">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span>Run Report</span>
+            </button>
+            <button onclick="toggleCustomQueryBuilder()" id="btnToggleQueryBuilder" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="sliders" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span>Custom Query</span>
+            </button>
+            <button onclick="exportReportsCSV()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="download" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Selected Report Details Strip -->
+        <div id="reportInfoBanner" class="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-400 gap-2">
+          <div class="flex items-center gap-2">
+            <span id="reportCategoryBadge" class="px-2 py-0.5 rounded font-mono font-bold text-[10px] bg-slate-800 text-slate-300">Category</span>
+            <span id="reportDescriptionText" class="text-slate-300 font-medium">Select a report to execute.</span>
+          </div>
+          <div class="flex items-center gap-4 text-[11px] font-mono">
+            <span>Root Node: <strong id="reportRootNodeText" class="text-amber-400">-</strong></span>
+            <span>Execution: <strong id="reportExecutionTimeText" class="text-emerald-400">0 ms</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KPI Ribbon for Active Report -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Report Rows</p>
+          <p id="kpiReportRows" class="text-2xl font-black text-white mt-1">0</p>
+          <p class="text-[10px] text-slate-500 mt-1">Real-time graph snapshot</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Join Traversal</p>
+          <p id="kpiReportJoins" class="text-2xl font-black text-cyan-400 mt-1">Direct</p>
+          <p class="text-[10px] text-slate-500 mt-1">Topological BFS resolution</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Engine Latency</p>
+          <p id="kpiReportLatency" class="text-2xl font-black text-emerald-400 mt-1">0 ms</p>
+          <p class="text-[10px] text-slate-500 mt-1">SQLite WAL zero overhead</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Graph Integrity</p>
+          <p class="text-2xl font-black text-indigo-400 mt-1">16 Nodes</p>
+          <p class="text-[10px] text-slate-500 mt-1">100% Schema connectivity</p>
+        </div>
+      </div>
+
+      <!-- CUSTOM GRAPH QUERY BUILDER (COLLAPSIBLE) -->
+      <div id="customQueryPanel" class="hidden bg-slate-900 border border-cyan-500/30 rounded-2xl p-5 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400">
+              <i data-lucide="git-fork" class="w-4 h-4"></i>
+            </span>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider">Custom Graph Query Builder</h3>
+          </div>
+          <button onclick="toggleCustomQueryBuilder()" class="text-slate-400 hover:text-white text-xs">✕ Close</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- 1. Root Entity -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5">1. Root Entity Node</label>
+            <select id="cqRootEntity" onchange="onCustomQueryRootChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-cyan-500">
+              <!-- Populated from schema -->
+            </select>
+          </div>
+
+          <!-- 2. Max Rows Limit -->
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5">Row Limit</label>
+            <input type="number" id="cqLimit" value="50" min="5" max="500" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-cyan-500">
+          </div>
+
+          <!-- 3. Actions -->
+          <div class="flex items-end gap-2">
+            <button onclick="executeCustomGraphQuery()" class="flex-1 py-2 px-4 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-600/25 transition">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span>Compile & Execute Graph</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Multi-Hop Fields Selector -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-300">2. Select Display Fields / Multi-Hop Relations</label>
+            <span class="text-[10px] text-slate-400">Select fields across reachable entities</span>
+          </div>
+          <div id="cqFieldsContainer" class="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-40 overflow-y-auto flex flex-wrap gap-1.5">
+            <!-- Dynamically populated field chips -->
+          </div>
+        </div>
+
+        <!-- Filters Section -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-300">3. Graph Filter Rules</label>
+            <button onclick="addCustomQueryFilterRow()" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Add Filter</span>
+            </button>
+          </div>
+          <div id="cqFiltersList" class="space-y-2">
+            <!-- Dynamic filter rows -->
+          </div>
+        </div>
+
+        <!-- Aggregations & Group By Section -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1.5">4. Group By Dimension (Optional)</label>
+            <select id="cqGroupBySelect" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-cyan-500">
+              <option value="">-- No Grouping (Raw Rows) --</option>
+            </select>
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="text-xs font-bold text-slate-300">Aggregations (Optional)</label>
+              <button onclick="addCustomQueryAggRow()" class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1">
+                <i data-lucide="plus" class="w-3 h-3"></i>
+                <span>Add Metric</span>
+              </button>
+            </div>
+            <div id="cqAggsList" class="space-y-2">
+              <!-- Dynamic agg rows -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Report Table Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60">
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+              <input type="text" id="reportTableSearch" oninput="filterReportTableRows()" placeholder="Filter table records..." class="bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:ring-2 focus:ring-amber-500 w-48 sm:w-64">
+            </div>
+            <span id="reportFilterCountBadge" class="text-xs text-slate-400">Showing all records</span>
+          </div>
+          <div class="text-[11px] text-slate-400 flex items-center gap-3">
+            <span id="reportSqlNotice" class="font-mono text-slate-500 truncate max-w-xs sm:max-w-md"></span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[600px] no-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead id="reportTableHead" class="bg-slate-950/80 sticky top-0 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800 z-10">
+              <!-- Populated dynamically -->
+            </thead>
+            <tbody id="reportTableBody" class="divide-y divide-slate-800 font-mono text-slate-200">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 14: WORKFLOW AUTOMATIONS & RECIPES (RIPPLING RECIPES) -->
+    <!-- ======================================================== -->
+    <section id="view-workflows" class="hidden space-y-6">
+      <!-- Top Banner -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="p-2 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400">
+                <i data-lucide="zap" class="w-5 h-5"></i>
+              </span>
+              <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">Factory Automation Recipes</h2>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">Rippling-Style</span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-400">Event-driven, graph-aware automation recipes evaluating multi-hop conditions with automated WhatsApp dispatches, debit notes, and remakes.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openRecipeModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white flex items-center gap-1.5 shadow-lg shadow-yellow-600/25 transition">
+              <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+              <span>+ Create Recipe</span>
+            </button>
+            <button onclick="loadWorkflowsData()" class="px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-750 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-Tab Navigation -->
+        <div class="flex items-center gap-2 mt-5 pt-4 border-t border-slate-800">
+          <button onclick="switchWorkflowSubTab('recipes')" id="btnWfSubRecipes" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-yellow-600 text-white transition">
+            Active Recipes (<span id="wfActiveRecipesCount">0</span>)
+          </button>
+          <button onclick="switchWorkflowSubTab('logs')" id="btnWfSubLogs" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+            Execution Audit Logs (<span id="wfLogsCount">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <!-- SUB-TAB 1: RECIPES CARDS GRID -->
+      <div id="wfSubSectionRecipes" class="space-y-4">
+        <div id="workflowRulesGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Dynamically populated cards -->
+        </div>
+      </div>
+
+      <!-- SUB-TAB 2: EXECUTION AUDIT LOGS TABLE -->
+      <div id="wfSubSectionLogs" class="hidden bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i data-lucide="list" class="w-4 h-4 text-yellow-400"></i>
+            <span>Real-Time Workflow Execution Audit Trail</span>
+          </h3>
+          <span class="text-xs text-slate-400">Logs captured in SQLite WAL mode</span>
+        </div>
+        <div class="overflow-x-auto max-h-[600px] no-scrollbar">
+          <table class="w-full text-left text-xs whitespace-nowrap">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">Recipe Name</th>
+                <th class="py-2.5 px-3">Trigger Entity / Event</th>
+                <th class="py-2.5 px-3">Record ID</th>
+                <th class="py-2.5 px-3">Latency</th>
+                <th class="py-2.5 px-3">Actions Dispatched</th>
+                <th class="py-2.5 px-3">Timestamp</th>
+              </tr>
+            </thead>
+            <tbody id="wfLogsTableBody" class="divide-y divide-slate-800 font-mono text-slate-200">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: RECIPE BUILDER -->
+  <!-- ======================================================== -->
+  <div id="modalRecipeBuilder" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-5 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-yellow-500/10 text-yellow-400">
+            <i data-lucide="zap" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <h3 class="text-base font-bold text-white">Create Workflow Automation Recipe</h3>
+            <p class="text-xs text-slate-400">Trigger actions automatically based on multi-hop graph conditions</p>
+          </div>
+        </div>
+        <button onclick="closeRecipeModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <form onsubmit="handleSaveRecipe(event)" class="space-y-4">
+        <!-- Name & Category -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-300 mb-1">Recipe Name *</label>
+            <input type="text" id="rbName" placeholder="e.g. High Palla Variance Alert" required class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-yellow-500">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-300 mb-1">Category</label>
+            <select id="rbCategory" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-yellow-500">
+              <option value="Operations">Operations</option>
+              <option value="Quality">Quality</option>
+              <option value="Cutting">Cutting</option>
+              <option value="Logistics">Logistics</option>
+              <option value="Finance">Finance</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Description</label>
+          <input type="text" id="rbDescription" placeholder="Explain the operational rationale..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-2 focus:ring-yellow-500">
+        </div>
+
+        <!-- Trigger Definition -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Trigger Entity Node *</label>
+            <select id="rbTriggerEntity" onchange="onRecipeBuilderEntityChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-yellow-400 font-semibold focus:ring-2 focus:ring-yellow-500">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Event *</label>
+            <select id="rbTriggerEvent" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:ring-2 focus:ring-yellow-500">
+              <option value="CREATE">ON CREATE</option>
+              <option value="UPDATE">ON UPDATE</option>
+              <option value="STATUS_CHANGE">ON STATUS CHANGE</option>
+              <option value="*">ANY EVENT (*)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Conditions Section -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <label class="text-xs font-bold text-slate-300">Condition Rules</label>
+              <select id="rbMatchType" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-[11px] text-cyan-400 font-bold">
+                <option value="ALL">Match ALL (AND)</option>
+                <option value="ANY">Match ANY (OR)</option>
+              </select>
+            </div>
+            <button type="button" onclick="addRecipeBuilderConditionRow()" class="text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Add Condition</span>
+            </button>
+          </div>
+          <div id="rbConditionsList" class="space-y-2">
+            <!-- Dynamic condition rows -->
+          </div>
+        </div>
+
+        <!-- Actions Pipeline Section -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-300">Action Execution Pipeline</label>
+            <button type="button" onclick="addRecipeBuilderActionRow()" class="text-xs text-yellow-400 hover:text-yellow-300 font-semibold flex items-center gap-1">
+              <i data-lucide="plus" class="w-3 h-3"></i>
+              <span>Add Action Step</span>
+            </button>
+          </div>
+          <div id="rbActionsList" class="space-y-2">
+            <!-- Dynamic action rows -->
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          <button type="button" onclick="closeRecipeModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white shadow-lg shadow-yellow-600/25 transition flex items-center gap-1.5">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Save & Activate Recipe</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: DRY-RUN SIMULATION -->
+  <!-- ======================================================== -->
+  <div id="modalTestRecipe" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 my-8">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <span class="p-2 rounded-xl bg-cyan-500/10 text-cyan-400">
+            <i data-lucide="play-circle" class="w-5 h-5"></i>
+          </span>
+          <div>
+            <h3 class="text-base font-bold text-white">Dry-Run Simulation</h3>
+            <p class="text-xs text-slate-400">Testing <strong id="testRuleTitle" class="text-white"></strong> on <span id="testRuleEntity" class="text-cyan-400 font-mono"></span></p>
+          </div>
+        </div>
+        <button onclick="closeTestRuleModal()" class="text-slate-400 hover:text-white text-sm">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 mb-1">Target Record Identifier</label>
+          <div class="flex items-center gap-2">
+            <input type="text" id="testRecordIdInput" placeholder="Enter entity ID or order code" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:ring-2 focus:ring-cyan-500">
+            <button onclick="runRuleDryRun()" class="px-4 py-2 rounded-xl text-xs font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-1.5 transition">
+              <i data-lucide="play" class="w-3.5 h-3.5"></i>
+              <span>Simulate</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p class="text-[10px] text-slate-500 mb-1">Quick Sample IDs:</p>
+          <div id="testSampleButtons" class="flex flex-wrap gap-1.5">
+            <!-- Sample IDs populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Test Results Panel -->
+      <div id="testResultsContainer" class="hidden space-y-3 pt-3 border-t border-slate-800">
+        <div id="testMatchBanner"></div>
+
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Condition Evaluation Details</p>
+          <div id="testConditionsDetails" class="space-y-1"></div>
+        </div>
+
+        <div class="space-y-1">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Simulated Action Pipeline Output</p>
+          <div id="testSimulatedActions" class="space-y-2 max-h-48 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-800 flex justify-end">
+        <button onclick="closeTestRuleModal()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-750 transition">Close</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ======================================================== -->
   <!-- JAVASCRIPT LOGIC & TIGHT VALIDATION ENGINE -->
@@ -1927,7 +2367,20 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
       transits: [],
       challans: [],
       radar: null,
-      audioEnabled: true
+      audioEnabled: true,
+      reports: {
+        schema: null,
+        prebuiltList: [],
+        activeReportData: null
+      },
+      workflows: {
+        rules: [],
+        logs: [],
+        metaTriggers: [],
+        metaActions: [],
+        activeSubTab: 'recipes',
+        currentTestRuleId: null
+      }
     };
 
     // Web Audio Synthesizer
@@ -1998,6 +2451,8 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
       if (tabId === 'inward') fetchNextParentCode();
       if (tabId === 'issue') refreshIssueDropdowns();
       if (tabId === 'ledger') loadStockLedger();
+      if (tabId === 'reports') loadReportsData();
+      if (tabId === 'workflows') loadWorkflowsData();
     }
 
     // Runner Sub-Tabs
@@ -3402,12 +3857,904 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
       } catch (e) { console.error('WhatsApp logs load failed', e); }
     }
 
+    // ========================================================
+    // UNIFIED GRAPH REPORTS JAVASCRIPT LOGIC
+    // ========================================================
+    async function loadReportsData() {
+      try {
+        if (!appState.reports.schema) {
+          const sRes = await fetch('/api/reports/schema');
+          const sJson = await sRes.json();
+          if (sJson.success) appState.reports.schema = sJson.entities;
+        }
+        if (!appState.reports.prebuiltList.length) {
+          const pRes = await fetch('/api/reports/prebuilt');
+          const pJson = await pRes.json();
+          if (pJson.success) {
+            appState.reports.prebuiltList = pJson.reports;
+            const sel = document.getElementById('prebuiltReportSelect');
+            if (sel) {
+              sel.innerHTML = pJson.reports.map(r => `<option value="${r.key}">${r.title}</option>`).join('');
+            }
+          }
+        }
+        populateCustomQueryRoots();
+
+        const sel = document.getElementById('prebuiltReportSelect');
+        const selectedKey = sel ? sel.value : (appState.reports.prebuiltList[0]?.key || 'cutting_yield_palla_variance');
+        if (selectedKey) {
+          await runReportByKey(selectedKey);
+        }
+      } catch (err) {
+        console.error('Error loading reports data:', err);
+      }
+    }
+
+    async function onPrebuiltReportSelected() {
+      const sel = document.getElementById('prebuiltReportSelect');
+      if (sel && sel.value) {
+        await runReportByKey(sel.value);
+      }
+    }
+
+    function runSelectedPrebuiltReport() {
+      const sel = document.getElementById('prebuiltReportSelect');
+      if (sel && sel.value) {
+        runReportByKey(sel.value);
+      }
+    }
+
+    async function runReportByKey(reportKey) {
+      try {
+        const res = await fetch(`/api/reports/prebuilt/${reportKey}`);
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          const rep = json.report;
+          document.getElementById('reportCategoryBadge').textContent = rep.category || 'Operations';
+          document.getElementById('reportDescriptionText').textContent = rep.description || rep.title;
+          document.getElementById('reportRootNodeText').textContent = rep.rootEntity || '-';
+          document.getElementById('reportExecutionTimeText').textContent = `${json.meta?.executionTimeMs || 1} ms`;
+
+          document.getElementById('kpiReportRows').textContent = json.summary?.rowCount || json.data.length;
+          document.getElementById('kpiReportLatency').textContent = `${json.meta?.executionTimeMs || 1} ms`;
+          document.getElementById('kpiReportJoins').textContent = json.meta?.joinsCount ? `${json.meta.joinsCount} Hops` : 'Multi-Hop';
+
+          appState.reports.activeReportData = {
+            title: rep.title,
+            columns: json.meta?.columns || (json.data.length ? Object.keys(json.data[0]) : []),
+            rows: json.data
+          };
+
+          renderReportTable(appState.reports.activeReportData.columns, appState.reports.activeReportData.rows);
+          document.getElementById('reportSqlNotice').textContent = `Root: ${rep.rootEntity} | Relational graph compiled query`;
+        } else {
+          playAudio('error');
+          alert(json.error || 'Failed to execute report');
+        }
+      } catch (e) {
+        console.error('Report execution failed:', e);
+      }
+    }
+
+    function renderReportTable(columns, rows) {
+      const thead = document.getElementById('reportTableHead');
+      const tbody = document.getElementById('reportTableBody');
+      const filterCount = document.getElementById('reportFilterCountBadge');
+
+      if (!columns || !columns.length) {
+        thead.innerHTML = '';
+        tbody.innerHTML = '<tr><td class="p-4 text-center text-slate-500 font-sans">No data returned for this query.</td></tr>';
+        if (filterCount) filterCount.textContent = '0 records found';
+        return;
+      }
+
+      thead.innerHTML = `<tr>${columns.map(col => {
+        const label = col.replace(/_/g, ' ').toUpperCase();
+        return `<th class="py-2.5 px-3 font-semibold">${label}</th>`;
+      }).join('')}</tr>`;
+
+      if (filterCount) filterCount.textContent = `Showing all ${rows.length} records`;
+
+      tbody.innerHTML = rows.map(row => {
+        return `<tr class="hover:bg-slate-800/60 transition">${columns.map(col => {
+          let val = row[col];
+          let displayVal = val;
+          let extraClasses = '';
+
+          if (val === null || val === undefined) {
+            displayVal = '<span class="text-slate-600">-</span>';
+          } else if (typeof val === 'number') {
+            const lowerCol = col.toLowerCase();
+            if (lowerCol.includes('variance') || lowerCol.includes('pct') || lowerCol.includes('percent') || lowerCol.includes('rate') || lowerCol.includes('yield')) {
+              const isHigh = val > 3.0;
+              extraClasses = isHigh ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold';
+              displayVal = `${val > 0 ? '+' : ''}${val}%`;
+            } else if (lowerCol.includes('amount') || lowerCol.includes('cost') || lowerCol.includes('total') || lowerCol.includes('debit') || lowerCol.includes('receivable') || lowerCol.includes('margin') || lowerCol.includes('gst')) {
+              displayVal = `₹${Number(val).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+              extraClasses = 'text-amber-300 font-semibold';
+            } else {
+              displayVal = val;
+            }
+          } else if (typeof val === 'string') {
+            if (['COMPLETED', 'DELIVERED_VERIFIED', 'PAID', 'PASS', 'VERIFIED'].includes(val)) {
+              displayVal = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${val}</span>`;
+            } else if (['DISPATCHED', 'IN_PROGRESS', 'PENDING', 'PARTIAL', 'IN_TRANSIT'].includes(val)) {
+              displayVal = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">${val}</span>`;
+            } else if (['REJECTED', 'DISCREPANCY_FLAGGED', 'FAIL', 'LOSS_CONFIRMED', 'OVERDUE'].includes(val)) {
+              displayVal = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">${val}</span>`;
+            } else {
+              displayVal = escapeHtml(val);
+            }
+          }
+          return `<td class="py-2.5 px-3 ${extraClasses}">${displayVal}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+    }
+
+    function filterReportTableRows() {
+      const query = document.getElementById('reportTableSearch').value.toLowerCase().trim();
+      const tbody = document.getElementById('reportTableBody');
+      const rows = tbody.querySelectorAll('tr');
+      let matchCount = 0;
+
+      rows.forEach(r => {
+        const text = r.textContent.toLowerCase();
+        const matches = !query || text.includes(query);
+        r.style.display = matches ? '' : 'none';
+        if (matches) matchCount++;
+      });
+
+      const filterCount = document.getElementById('reportFilterCountBadge');
+      if (filterCount) {
+        filterCount.textContent = query ? `Showing ${matchCount} matching records` : `Showing all ${rows.length} records`;
+      }
+    }
+
+    function toggleCustomQueryBuilder() {
+      const panel = document.getElementById('customQueryPanel');
+      panel.classList.toggle('hidden');
+      lucide.createIcons();
+    }
+
+    function populateCustomQueryRoots() {
+      const schema = appState.reports.schema;
+      if (!schema) return;
+      const sel = document.getElementById('cqRootEntity');
+      if (sel && sel.options.length === 0) {
+        sel.innerHTML = Object.keys(schema).map(k => {
+          const ent = schema[k];
+          return `<option value="${k}">${ent.displayName || k} (${k})</option>`;
+        }).join('');
+        onCustomQueryRootChange();
+      }
+    }
+
+    function onCustomQueryRootChange() {
+      const rootKey = document.getElementById('cqRootEntity').value;
+      const schema = appState.reports.schema;
+      if (!schema || !schema[rootKey]) return;
+      const ent = schema[rootKey];
+
+      const fieldsDiv = document.getElementById('cqFieldsContainer');
+      let fieldsHtml = '';
+
+      (ent.fields || []).forEach(f => {
+        fieldsHtml += `
+          <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-slate-900 border border-slate-800 text-slate-300 hover:border-slate-700 cursor-pointer">
+            <input type="checkbox" name="cqField" value="${f.name}" checked class="rounded bg-slate-950 border-slate-700 text-cyan-600 focus:ring-0">
+            <span>${f.name}</span>
+          </label>
+        `;
+      });
+
+      (ent.relationships || []).forEach(rel => {
+        const target = schema[rel.targetEntity];
+        if (target && target.fields) {
+          target.fields.slice(0, 5).forEach(tf => {
+            fieldsHtml += `
+              <label class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-cyan-950/30 border border-cyan-800/40 text-cyan-300 hover:border-cyan-700 cursor-pointer" title="${rel.name}.${tf.name}">
+                <input type="checkbox" name="cqField" value="${rel.name}.${tf.name}" class="rounded bg-slate-950 border-cyan-700 text-cyan-600 focus:ring-0">
+                <span>${rel.name}.${tf.name}</span>
+              </label>
+            `;
+          });
+        }
+      });
+
+      fieldsDiv.innerHTML = fieldsHtml;
+
+      const groupSel = document.getElementById('cqGroupBySelect');
+      groupSel.innerHTML = '<option value="">-- No Grouping (Raw Rows) --</option>' +
+        (ent.fields || []).map(f => `<option value="${f.name}">${f.name}</option>`).join('') +
+        (ent.relationships || []).map(r => `<option value="${r.name}.name">${r.name}.name</option>`).join('');
+
+      document.getElementById('cqFiltersList').innerHTML = '';
+      document.getElementById('cqAggsList').innerHTML = '';
+      addCustomQueryFilterRow();
+    }
+
+    function addCustomQueryFilterRow() {
+      const rootKey = document.getElementById('cqRootEntity').value;
+      const schema = appState.reports.schema;
+      if (!schema || !schema[rootKey]) return;
+      const ent = schema[rootKey];
+
+      const container = document.getElementById('cqFiltersList');
+      const rowId = `filter-row-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+
+      const fieldOptions = (ent.fields || []).map(f => `<option value="${f.name}">${f.name}</option>`).join('') +
+        (ent.relationships || []).map(r => `<option value="${r.name}.name">${r.name}.name</option>`).join('');
+
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = 'flex flex-wrap items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800';
+      div.innerHTML = `
+        <select class="cq-filter-field bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+          ${fieldOptions}
+        </select>
+        <select class="cq-filter-op bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+          <option value="eq">=</option>
+          <option value="neq">!=</option>
+          <option value="gt">&gt;</option>
+          <option value="gte">&gt;=</option>
+          <option value="lt">&lt;</option>
+          <option value="lte">&lt;=</option>
+          <option value="contains">contains</option>
+        </select>
+        <input type="text" placeholder="Value..." class="cq-filter-val bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white flex-1 min-w-[120px]">
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function addCustomQueryAggRow() {
+      const rootKey = document.getElementById('cqRootEntity').value;
+      const schema = appState.reports.schema;
+      if (!schema || !schema[rootKey]) return;
+      const ent = schema[rootKey];
+
+      const container = document.getElementById('cqAggsList');
+      const rowId = `agg-row-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+
+      const numFields = (ent.fields || []).filter(f => ['number', 'currency', 'percent'].includes(f.type)).map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = 'flex flex-wrap items-center gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800';
+      div.innerHTML = `
+        <select class="cq-agg-func bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+          <option value="COUNT">COUNT</option>
+          <option value="SUM">SUM</option>
+          <option value="AVG">AVG</option>
+          <option value="MIN">MIN</option>
+          <option value="MAX">MAX</option>
+        </select>
+        <select class="cq-agg-field bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white">
+          <option value="*">* (All Records)</option>
+          ${numFields}
+        </select>
+        <input type="text" placeholder="Alias (e.g. total_qty)" class="cq-agg-alias bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white flex-1 min-w-[100px]">
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    async function executeCustomGraphQuery() {
+      const rootEntity = document.getElementById('cqRootEntity').value;
+      const limit = parseInt(document.getElementById('cqLimit').value, 10) || 50;
+
+      const checkedBoxes = Array.from(document.querySelectorAll('input[name="cqField"]:checked'));
+      const fields = checkedBoxes.map(b => b.value);
+
+      const filterRows = document.querySelectorAll('#cqFiltersList > div');
+      const filters = [];
+      filterRows.forEach(r => {
+        const field = r.querySelector('.cq-filter-field')?.value;
+        const op = r.querySelector('.cq-filter-op')?.value;
+        const value = r.querySelector('.cq-filter-val')?.value.trim();
+        if (field && value !== '') {
+          filters.push({ field, op, value: isNaN(value) ? value : Number(value) });
+        }
+      });
+
+      const groupByVal = document.getElementById('cqGroupBySelect').value;
+      const groupBy = groupByVal ? [groupByVal] : [];
+
+      const aggRows = document.querySelectorAll('#cqAggsList > div');
+      const aggregations = [];
+      aggRows.forEach(r => {
+        const func = r.querySelector('.cq-agg-func')?.value;
+        const field = r.querySelector('.cq-agg-field')?.value;
+        const alias = r.querySelector('.cq-agg-alias')?.value.trim();
+        if (func) {
+          aggregations.push({
+            func,
+            field: field === '*' ? undefined : field,
+            alias: alias || `${func.toLowerCase()}_${field || 'all'}`
+          });
+        }
+      });
+
+      const payload = {
+        rootEntity,
+        fields: fields.length ? fields : ['*'],
+        filters,
+        groupBy,
+        aggregations,
+        limit
+      };
+
+      try {
+        const res = await fetch('/api/reports/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          document.getElementById('reportCategoryBadge').textContent = 'Custom Query';
+          document.getElementById('reportDescriptionText').textContent = `Query on ${rootEntity} across graph`;
+          document.getElementById('reportRootNodeText').textContent = rootEntity;
+          document.getElementById('reportExecutionTimeText').textContent = `${json.meta?.executionTimeMs || 1} ms`;
+
+          document.getElementById('kpiReportRows').textContent = json.rowCount;
+          document.getElementById('kpiReportLatency').textContent = `${json.meta?.executionTimeMs || 1} ms`;
+          document.getElementById('kpiReportJoins').textContent = 'Custom BFS';
+
+          appState.reports.activeReportData = {
+            title: `Custom Query (${rootEntity})`,
+            columns: json.columns,
+            rows: json.rows
+          };
+
+          renderReportTable(json.columns, json.rows);
+          document.getElementById('reportSqlNotice').textContent = `Custom compiled BFS graph query with ${fields.length} dimensions`;
+          toggleCustomQueryBuilder();
+        } else {
+          playAudio('error');
+          alert(json.error || 'Query compilation error');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function exportReportsCSV() {
+      if (!appState.reports.activeReportData || !appState.reports.activeReportData.rows.length) {
+        alert('No report data to export.');
+        return;
+      }
+      const { title, columns, rows } = appState.reports.activeReportData;
+      const csvRows = [];
+      csvRows.push(columns.join(','));
+
+      rows.forEach(r => {
+        const values = columns.map(c => {
+          let v = r[c];
+          if (v === null || v === undefined) return '""';
+          const escaped = String(v).replace(/"/g, '""');
+          return `"${escaped}"`;
+        });
+        csvRows.push(values.join(','));
+      });
+
+      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `${(title || 'report').toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    // ========================================================
+    // WORKFLOW AUTOMATION & RECIPES JAVASCRIPT LOGIC
+    // ========================================================
+    async function loadWorkflowsData() {
+      try {
+        if (!appState.workflows.metaTriggers.length) {
+          const tRes = await fetch('/api/workflows/meta/triggers');
+          const tJson = await tRes.json();
+          if (tJson.success) appState.workflows.metaTriggers = tJson.triggers;
+        }
+        if (!appState.workflows.metaActions.length) {
+          const aRes = await fetch('/api/workflows/meta/actions');
+          const aJson = await aRes.json();
+          if (aJson.success) appState.workflows.metaActions = aJson.actions;
+        }
+
+        const rRes = await fetch('/api/workflows');
+        const rJson = await rRes.json();
+        if (rJson.success) {
+          appState.workflows.rules = rJson.rules;
+          const activeCount = rJson.rules.filter(r => r.enabled).length;
+          document.getElementById('wfActiveRecipesCount').textContent = rJson.rules.length;
+          const badge = document.getElementById('activeRulesBadge');
+          if (badge) badge.textContent = activeCount;
+          renderWorkflowRules(rJson.rules);
+        }
+
+        const lRes = await fetch('/api/workflows/logs');
+        const lJson = await lRes.json();
+        if (lJson.success) {
+          appState.workflows.logs = lJson.logs;
+          document.getElementById('wfLogsCount').textContent = lJson.count;
+          renderWorkflowLogs(lJson.logs);
+        }
+      } catch (err) {
+        console.error('Failed to load workflows:', err);
+      }
+    }
+
+    function switchWorkflowSubTab(subTab) {
+      appState.workflows.activeSubTab = subTab;
+      const isRecipes = subTab === 'recipes';
+      document.getElementById('wfSubSectionRecipes').classList.toggle('hidden', !isRecipes);
+      document.getElementById('wfSubSectionLogs').classList.toggle('hidden', isRecipes);
+
+      document.getElementById('btnWfSubRecipes').className = isRecipes
+        ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-yellow-600 text-white transition'
+        : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btnWfSubLogs').className = !isRecipes
+        ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-yellow-600 text-white transition'
+        : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+
+      lucide.createIcons();
+    }
+
+    function renderWorkflowRules(rules) {
+      const grid = document.getElementById('workflowRulesGrid');
+      if (!rules || !rules.length) {
+        grid.innerHTML = '<div class="col-span-2 p-8 text-center text-slate-500 font-sans">No automation recipes registered. Tap "+ Create Recipe" to add one!</div>';
+        return;
+      }
+
+      grid.innerHTML = rules.map(rule => {
+        const isEnabled = Boolean(rule.enabled);
+        const condObj = rule.conditions || {};
+        const condList = Array.isArray(condObj) ? condObj : (condObj.conditions || []);
+        const matchType = condObj.matchType || 'ALL';
+
+        const condHtml = condList.map(c => {
+          return `<span class="px-2 py-0.5 rounded text-[11px] bg-slate-950 border border-slate-800 text-cyan-400 font-mono">${c.field} ${c.op} ${c.value}</span>`;
+        }).join(`<span class="text-[10px] text-slate-500 font-bold">${matchType}</span>`);
+
+        const actionsList = rule.actions || [];
+        const actionsHtml = actionsList.map(a => {
+          let icon = 'zap';
+          if (a.type === 'SEND_WHATSAPP') icon = 'message-square';
+          if (a.type === 'CREATE_DEBIT_NOTE') icon = 'dollar-sign';
+          if (a.type === 'QUEUE_REMAKE_ORDER') icon = 'scissors';
+          return `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/30">
+            <i data-lucide="${icon}" class="w-3 h-3"></i>
+            <span>${a.type}</span>
+          </span>`;
+        }).join(' ');
+
+        return `
+          <div class="bg-slate-900 border ${isEnabled ? 'border-slate-800 hover:border-slate-700' : 'border-slate-850 opacity-60'} rounded-2xl p-5 shadow-xl transition space-y-3.5">
+            <div class="flex items-start justify-between gap-3">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300 font-mono">${rule.category || 'Operations'}</span>
+                  <h3 class="text-sm font-bold text-white tracking-tight">${escapeHtml(rule.name)}</h3>
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">${escapeHtml(rule.description || '')}</p>
+              </div>
+
+              <button onclick="toggleWorkflowRule('${rule.id}', ${!isEnabled})" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isEnabled ? 'bg-emerald-600' : 'bg-slate-700'}" role="switch" title="Toggle active">
+                <span class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isEnabled ? 'translate-x-5' : 'translate-x-0'}"></span>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400 bg-slate-950/60 px-3 py-1.5 rounded-xl border border-slate-800/80">
+              <span class="text-yellow-400 font-bold">ON ${rule.trigger_event || 'CREATE'}</span>
+              <span>⟶</span>
+              <span class="text-white font-semibold">${rule.trigger_entity}</span>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conditions</p>
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${condHtml || '<span class="text-slate-600 text-xs">Always matches</span>'}
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Actions Pipeline</p>
+              <div class="flex flex-wrap items-center gap-1.5">
+                ${actionsHtml}
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+              <span>Triggered <strong class="text-slate-300">${rule.execution_count || 0}</strong> times</span>
+              <div class="flex items-center gap-2">
+                <button onclick="openTestRuleModal('${rule.id}')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-750 text-cyan-400 hover:text-cyan-300 font-semibold flex items-center gap-1 transition">
+                  <i data-lucide="play-circle" class="w-3.5 h-3.5"></i>
+                  <span>Dry-Run</span>
+                </button>
+                <button onclick="deleteWorkflowRule('${rule.id}')" class="px-2 py-1 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition" title="Delete recipe">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    async function toggleWorkflowRule(ruleId, newEnabled) {
+      try {
+        const res = await fetch(`/api/workflows/${ruleId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: newEnabled })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          loadWorkflowsData();
+        } else {
+          playAudio('error');
+          alert(json.error || 'Failed to update rule');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    async function deleteWorkflowRule(ruleId) {
+      if (!confirm('Are you sure you want to delete this automation recipe?')) return;
+      try {
+        const res = await fetch(`/api/workflows/${ruleId}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          loadWorkflowsData();
+        } else {
+          alert(json.error || 'Failed to delete rule');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function renderWorkflowLogs(logs) {
+      const tbody = document.getElementById('wfLogsTableBody');
+      if (!logs || !logs.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="p-6 text-center text-slate-500 font-sans">No execution logs recorded yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">UNKNOWN</span>';
+        if (l.status === 'SUCCESS') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">SUCCESS</span>';
+        } else if (l.status === 'SKIPPED_CONDITIONS') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">SKIPPED</span>';
+        } else if (l.status === 'ERROR') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">FAILED</span>';
+        }
+
+        const actionsCount = (l.actions_executed || []).length;
+        return `
+          <tr class="hover:bg-slate-850 transition">
+            <td class="py-2.5 px-3">${statusBadge}</td>
+            <td class="py-2.5 px-3 font-semibold text-white">${escapeHtml(l.rule_name || l.rule_id)}</td>
+            <td class="py-2.5 px-3 text-cyan-400 font-mono">${l.trigger_entity}</td>
+            <td class="py-2.5 px-3 text-slate-300 font-mono">${l.trigger_record_id}</td>
+            <td class="py-2.5 px-3 text-emerald-400 font-mono">${l.execution_time_ms || 1} ms</td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">${actionsCount} Action(s)</span>
+            </td>
+            <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${l.executed_at || '-'}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openRecipeModal() {
+      const modal = document.getElementById('modalRecipeBuilder');
+      modal.classList.remove('hidden');
+
+      const triggers = appState.workflows.metaTriggers;
+      const sel = document.getElementById('rbTriggerEntity');
+      sel.innerHTML = triggers.map(t => `<option value="${t.entity}">${t.displayName} (${t.entity})</option>`).join('');
+
+      onRecipeBuilderEntityChange();
+
+      document.getElementById('rbConditionsList').innerHTML = '';
+      document.getElementById('rbActionsList').innerHTML = '';
+      addRecipeBuilderConditionRow();
+      addRecipeBuilderActionRow();
+
+      lucide.createIcons();
+    }
+
+    function closeRecipeModal() {
+      document.getElementById('modalRecipeBuilder').classList.add('hidden');
+    }
+
+    function onRecipeBuilderEntityChange() {
+      const rootEntity = document.getElementById('rbTriggerEntity').value;
+      const trigger = appState.workflows.metaTriggers.find(t => t.entity === rootEntity);
+      if (!trigger) return;
+
+      const fieldOptions = (trigger.fields || []).map(f => `<option value="${f.path}">${f.name} (${f.type})</option>`).join('');
+      document.querySelectorAll('.rb-cond-field').forEach(el => {
+        el.innerHTML = fieldOptions;
+      });
+    }
+
+    function addRecipeBuilderConditionRow() {
+      const rootEntity = document.getElementById('rbTriggerEntity').value;
+      const trigger = appState.workflows.metaTriggers.find(t => t.entity === rootEntity) || {};
+      const fieldOptions = (trigger.fields || []).map(f => `<option value="${f.path}">${f.name} (${f.type})</option>`).join('');
+
+      const rowId = `rb-cond-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+      const container = document.getElementById('rbConditionsList');
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = 'flex flex-wrap items-center gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800';
+      div.innerHTML = `
+        <select class="rb-cond-field bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white flex-1 min-w-[140px]">
+          ${fieldOptions}
+        </select>
+        <select class="rb-cond-op bg-slate-900 border border-slate-700 rounded-lg px-2 py-1.5 text-xs text-white">
+          <option value="gt">&gt;</option>
+          <option value="gte">&gt;=</option>
+          <option value="lt">&lt;</option>
+          <option value="lte">&lt;=</option>
+          <option value="eq">=</option>
+          <option value="neq">!=</option>
+          <option value="contains">contains</option>
+        </select>
+        <input type="text" placeholder="Value..." class="rb-cond-val bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white flex-1 min-w-[100px]">
+        <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1">✕</button>
+      `;
+      container.appendChild(div);
+    }
+
+    function addRecipeBuilderActionRow() {
+      const actions = appState.workflows.metaActions || [];
+      const actionOptions = actions.map(a => `<option value="${a.type}">${a.displayName}</option>`).join('');
+
+      const rowId = `rb-act-${Date.now()}-${Math.random().toString(36).substring(2, 5)}`;
+      const container = document.getElementById('rbActionsList');
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = 'space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800';
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <select class="rb-act-type bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs text-yellow-400 font-semibold" onchange="onActionTypeRowChange('${rowId}', this.value)">
+            ${actionOptions}
+          </select>
+          <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-rose-400 hover:text-rose-300 text-xs px-2">✕ Remove</button>
+        </div>
+        <div class="rb-act-params-container space-y-1.5">
+          <input type="text" placeholder="Phone e.g. 919822233445" class="rb-act-phone w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+          <textarea placeholder="Message template e.g. Alert: {{order.production_order_no}} has variance {{palla_variance_percent}}%" rows="2" class="rb-act-template w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white"></textarea>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function onActionTypeRowChange(rowId, actionType) {
+      const row = document.getElementById(rowId);
+      const container = row.querySelector('.rb-act-params-container');
+      if (actionType === 'SEND_WHATSAPP') {
+        container.innerHTML = `
+          <input type="text" placeholder="Phone e.g. 919822233445" class="rb-act-phone w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+          <textarea placeholder="Message template e.g. Alert: {{order.production_order_no}} has variance {{palla_variance_percent}}%" rows="2" class="rb-act-template w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white"></textarea>
+        `;
+      } else if (actionType === 'CREATE_DEBIT_NOTE') {
+        container.innerHTML = `
+          <input type="text" placeholder="Vendor ID e.g. {{vendor.id}}" class="rb-act-vendor-id w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+          <input type="number" placeholder="Cost per spoiled panel (₹) e.g. 45" value="45" class="rb-act-cost w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+        `;
+      } else if (actionType === 'QUEUE_REMAKE_ORDER') {
+        container.innerHTML = `
+          <input type="text" placeholder="Order No e.g. {{order.production_order_no}}" class="rb-act-order-no w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+          <select class="rb-act-priority w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+            <option value="CRITICAL">CRITICAL Priority</option>
+            <option value="HIGH">HIGH Priority</option>
+            <option value="NORMAL">NORMAL Priority</option>
+          </select>
+        `;
+      } else {
+        container.innerHTML = `
+          <input type="text" placeholder="Action remarks or details..." class="rb-act-generic w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white">
+        `;
+      }
+    }
+
+    async function handleSaveRecipe(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('rbName').value.trim();
+      const category = document.getElementById('rbCategory').value.trim() || 'Operations';
+      const description = document.getElementById('rbDescription').value.trim();
+      const trigger_entity = document.getElementById('rbTriggerEntity').value;
+      const trigger_event = document.getElementById('rbTriggerEvent').value;
+      const matchType = document.getElementById('rbMatchType').value;
+
+      if (!name) {
+        alert('Please enter a recipe name.');
+        return;
+      }
+
+      const condRows = document.querySelectorAll('#rbConditionsList > div');
+      const conditions = [];
+      condRows.forEach(r => {
+        const field = r.querySelector('.rb-cond-field')?.value;
+        const op = r.querySelector('.rb-cond-op')?.value;
+        const value = r.querySelector('.rb-cond-val')?.value.trim();
+        if (field && value !== '') {
+          conditions.push({ field, op, value: isNaN(value) ? value : Number(value) });
+        }
+      });
+
+      const actRows = document.querySelectorAll('#rbActionsList > div');
+      const actions = [];
+      actRows.forEach(r => {
+        const type = r.querySelector('.rb-act-type')?.value;
+        const params = {};
+        if (type === 'SEND_WHATSAPP') {
+          params.phone = r.querySelector('.rb-act-phone')?.value.trim() || '919822233445';
+          params.template = r.querySelector('.rb-act-template')?.value.trim() || 'Workflow alert for {{order.production_order_no}}';
+        } else if (type === 'CREATE_DEBIT_NOTE') {
+          params.vendorId = r.querySelector('.rb-act-vendor-id')?.value.trim() || '{{vendor.id}}';
+          params.panelCostPerPc = parseFloat(r.querySelector('.rb-act-cost')?.value) || 45.0;
+        } else if (type === 'QUEUE_REMAKE_ORDER') {
+          params.productionOrderNo = r.querySelector('.rb-act-order-no')?.value.trim() || '{{order.production_order_no}}';
+          params.priority = r.querySelector('.rb-act-priority')?.value || 'HIGH';
+        } else {
+          params.remarks = r.querySelector('.rb-act-generic')?.value.trim() || 'Logged via workflow';
+        }
+        actions.push({ type, params });
+      });
+
+      const payload = {
+        name,
+        category,
+        description,
+        trigger_entity,
+        trigger_event,
+        enabled: true,
+        conditions: { matchType, conditions },
+        actions
+      };
+
+      try {
+        const res = await fetch('/api/workflows', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          closeRecipeModal();
+          loadWorkflowsData();
+        } else {
+          playAudio('error');
+          alert(json.error || 'Failed to create recipe');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function openTestRuleModal(ruleId) {
+      const rule = appState.workflows.rules.find(r => r.id === ruleId);
+      if (!rule) return;
+
+      appState.workflows.currentTestRuleId = ruleId;
+      const modal = document.getElementById('modalTestRecipe');
+      modal.classList.remove('hidden');
+
+      document.getElementById('testRuleTitle').textContent = rule.name;
+      document.getElementById('testRuleEntity').textContent = rule.trigger_entity;
+      document.getElementById('testResultsContainer').classList.add('hidden');
+
+      const samplesDiv = document.getElementById('testSampleButtons');
+      let samples = ['demo-01'];
+      if (rule.trigger_entity === 'cutting_jobs') samples = ['cut-demo-01', 'cut-demo-02'];
+      else if (rule.trigger_entity === 'transits') samples = ['trn-demo-01', 'trn-demo-02'];
+      else if (rule.trigger_entity === 'floor_logs') samples = ['proc-demo-01', 'proc-demo-02'];
+      else if (rule.trigger_entity === 'challans') samples = ['ch-demo-01', 'ch-demo-02'];
+      else if (rule.trigger_entity === 'orders') samples = ['FPCC-PO-26001', 'FPCC-PO-26002'];
+      else if (rule.trigger_entity === 'invoices') samples = ['INV-26001'];
+
+      samplesDiv.innerHTML = samples.map(s => `
+        <button type="button" onclick="document.getElementById('testRecordIdInput').value = '${s}'" class="px-2 py-0.5 rounded text-[11px] font-mono bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition">${s}</button>
+      `).join('');
+
+      document.getElementById('testRecordIdInput').value = samples[0] || '';
+      lucide.createIcons();
+    }
+
+    function closeTestRuleModal() {
+      document.getElementById('modalTestRecipe').classList.add('hidden');
+    }
+
+    async function runRuleDryRun() {
+      const ruleId = appState.workflows.currentTestRuleId;
+      const recordId = document.getElementById('testRecordIdInput').value.trim();
+      if (!recordId) {
+        alert('Please enter a record identifier.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/workflows/${ruleId}/test`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recordId })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          const resultsDiv = document.getElementById('testResultsContainer');
+          resultsDiv.classList.remove('hidden');
+
+          const banner = document.getElementById('testMatchBanner');
+          if (json.matched) {
+            banner.className = 'p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 font-bold text-xs flex items-center gap-2';
+            banner.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span><span>✓ CONDITIONS MATCHED — Actions would execute live!</span>';
+          } else {
+            banner.className = 'p-3 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 font-bold text-xs flex items-center gap-2';
+            banner.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span><span>Condition logic did not match (Execution skipped).</span>';
+          }
+
+          const detailsList = document.getElementById('testConditionsDetails');
+          detailsList.innerHTML = (json.conditionDetails || []).map(d => `
+            <div class="flex items-center justify-between text-xs bg-slate-950 p-2 rounded-lg border border-slate-800">
+              <span class="font-mono text-cyan-300">${d.field} (${d.op} ${d.expected})</span>
+              <span class="font-mono ${d.passed ? 'text-emerald-400' : 'text-rose-400'}">Actual: ${d.actual} [${d.passed ? 'PASSED' : 'FAILED'}]</span>
+            </div>
+          `).join('');
+
+          const actionsDiv = document.getElementById('testSimulatedActions');
+          if (json.simulatedActions && json.simulatedActions.length) {
+            actionsDiv.innerHTML = json.simulatedActions.map(a => `
+              <div class="bg-slate-950 p-3 rounded-xl border border-yellow-500/20 text-xs space-y-1 font-mono">
+                <span class="font-bold text-yellow-400">${a.type}</span>
+                <pre class="text-[11px] text-slate-300 whitespace-pre-wrap">${JSON.stringify(a.payload, null, 2)}</pre>
+              </div>
+            `).join('');
+          } else {
+            actionsDiv.innerHTML = '<p class="text-xs text-slate-500">No actions executed.</p>';
+          }
+        } else {
+          playAudio('error');
+          alert(json.error || 'Dry run simulation failed');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
       lucide.createIcons();
       await loadMasters();
       await loadOperationsRadar();
       await loadTransitsList();
+
+      // Preload active workflows badge
+      fetch('/api/workflows').then(r => r.json()).then(j => {
+        if (j.success) {
+          const badge = document.getElementById('activeRulesBadge');
+          if (badge) badge.textContent = j.rules.filter(r => r.enabled).length;
+        }
+      }).catch(() => {});
     });
   </script>
 </body>
