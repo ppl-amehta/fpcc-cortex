@@ -66,3 +66,7 @@ jobs:
       - name: Run Enterprise Backend 12-Service E2E Verification
         run: |
           python3 scripts/test_enterprise_backend.py
+
+      - name: Run Unified Graph & Modular Reporting Verification
+        run: |
+          python3 scripts/test_unified_graph_reporting.py

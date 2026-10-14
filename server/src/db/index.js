@@ -78,4 +78,8 @@ const db = {
   }
 };
 
+db.getDb = getDb;
+
 module.exports = db;
+module.exports.getDb = getDb;
+module.exports.db = db;
