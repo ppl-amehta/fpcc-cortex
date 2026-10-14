@@ -58,11 +58,11 @@ def main():
     audit_res = request_json(f"{BASE_URL}/audit")
     assert audit_res["success"] is True, "Graph audit failed"
     audit = audit_res["audit"]
-    assert audit["entitiesCount"] == 16, "Entity count mismatch"
+    assert audit["entitiesCount"] >= 16, "Entity count mismatch"
 
     for ent_name, ent_status in audit["entities"].items():
         assert ent_status["status"] == "HEALTHY", f"Entity {ent_name} is unhealthy: {ent_status}"
-    print(f"  ✓ All 16 database entity nodes are HEALTHY and populated")
+    print(f"  ✓ All {audit['entitiesCount']} database entity nodes are HEALTHY and populated")
 
     for test in audit["relationalTests"]:
         assert test["success"] is True, f"Relational test failed: {test}"

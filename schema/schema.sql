@@ -4,13 +4,40 @@
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
--- 1. USERS & ROLES
+-- 1. ROLES & ORGANIZATIONAL HIERARCHY
+CREATE TABLE IF NOT EXISTS roles (
+    id TEXT PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    level INTEGER NOT NULL,
+    parent_role_code TEXT,
+    department TEXT NOT NULL,
+    description TEXT,
+    allowed_views TEXT NOT NULL, -- JSON array of accessible view IDs or ["*"]
+    allowed_reports TEXT NOT NULL, -- JSON array of accessible report keys or ["*"]
+    allowed_workflows TEXT NOT NULL, -- JSON array of workflow entities or ["*"]
+    permissions TEXT NOT NULL, -- JSON array of granular permissions
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_role_code) REFERENCES roles(code)
+);
+CREATE INDEX IF NOT EXISTS idx_roles_level ON roles(level);
+CREATE INDEX IF NOT EXISTS idx_roles_parent ON roles(parent_role_code);
+
+-- 2. USERS & STAFF
 CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
     user_name TEXT NOT NULL,
     email TEXT UNIQUE,
-    role TEXT NOT NULL, -- SuperAdmin, Admin, Stores, Merchandiser, Packing Store
+    role TEXT NOT NULL, -- SuperAdmin, Admin, Stores, Merchandiser, Packing Store, etc.
+    role_code TEXT REFERENCES roles(code),
+    manager_id TEXT REFERENCES users(id),
     pin_code TEXT DEFAULT '1234',
+    password_hash TEXT,
+    salt TEXT,
+    phone TEXT,
+    department TEXT,
+    designation TEXT,
+    avatar_color TEXT,
     can_inward INTEGER DEFAULT 1,
     can_issue INTEGER DEFAULT 1,
     can_return INTEGER DEFAULT 1,
@@ -18,6 +45,15 @@ CREATE TABLE IF NOT EXISTS users (
     can_block INTEGER DEFAULT 0,
     active INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_users_role_code ON users(role_code);
+CREATE INDEX IF NOT EXISTS idx_users_manager ON users(manager_id);
+
+-- SYSTEM SETTINGS (Dynamic Runtime Configuration)
+CREATE TABLE IF NOT EXISTS system_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. BUSINESS ENTITIES (Vendors & Clients)

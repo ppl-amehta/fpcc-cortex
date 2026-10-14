@@ -35,6 +35,7 @@ jobs:
         run: |
           python3 scripts/ingest_excel.py
           python3 scripts/seed_operations.py
+          python3 scripts/seed_roles_and_users.py
 
       - name: Start Server in Background
         run: |
@@ -74,3 +75,7 @@ jobs:
       - name: Run Graph Workflows & Modular Triggers Verification
         run: |
           python3 scripts/test_graph_workflows.py
+
+      - name: Run Role Management, Hierarchy & Security Verification
+        run: |
+          python3 scripts/test_roles_and_hierarchy.py

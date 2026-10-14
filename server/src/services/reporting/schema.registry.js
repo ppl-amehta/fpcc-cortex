@@ -708,19 +708,85 @@ const ENTITIES = {
     }
   },
 
+  roles: {
+    tableName: 'roles',
+    primaryKey: 'id',
+    businessKey: 'code',
+    displayName: 'Roles & Hierarchy',
+    description: 'Organizational hierarchy, departments, view privileges, and reporting lines.',
+    fields: {
+      id: { type: 'string', displayName: 'Role ID' },
+      code: { type: 'string', displayName: 'Role Code', filterable: true },
+      name: { type: 'string', displayName: 'Role Name', filterable: true },
+      level: { type: 'number', displayName: 'Hierarchy Level', filterable: true, aggregatable: ['min', 'max', 'avg'] },
+      parent_role_code: { type: 'string', displayName: 'Supervising Role Code', filterable: true },
+      department: { type: 'string', displayName: 'Department', filterable: true },
+      description: { type: 'string', displayName: 'Description' }
+    },
+    relationships: {
+      parent_role: {
+        targetEntity: 'roles',
+        type: 'belongsTo',
+        localKey: 'parent_role_code',
+        targetKey: 'code',
+        displayName: 'Supervising Role'
+      },
+      child_roles: {
+        targetEntity: 'roles',
+        type: 'hasMany',
+        localKey: 'code',
+        targetKey: 'parent_role_code',
+        displayName: 'Subordinate Roles'
+      },
+      users: {
+        targetEntity: 'users',
+        type: 'hasMany',
+        localKey: 'code',
+        targetKey: 'role_code',
+        displayName: 'Assigned Staff'
+      }
+    }
+  },
+
   users: {
     tableName: 'users',
     primaryKey: 'id',
     businessKey: 'user_name',
     displayName: 'Factory Workers & Staff',
-    description: 'Factory operators, cutting masters, runners, store keepers, and line supervisors.',
+    description: 'Factory operators, cutting masters, runners, store keepers, merchandisers, and management staff.',
     fields: {
       id: { type: 'string', displayName: 'User ID' },
       user_name: { type: 'string', displayName: 'Worker Name', filterable: true },
-      role: { type: 'enum', displayName: 'Role', filterable: true, options: ['SuperAdmin', 'Admin', 'Stores', 'Merchandiser', 'Packing Store', 'Cutter', 'Runner', 'Operator'] },
-      active: { type: 'boolean', displayName: 'Active Status' }
+      email: { type: 'string', displayName: 'Email', filterable: true },
+      role_code: { type: 'string', displayName: 'Role Code', filterable: true },
+      manager_id: { type: 'string', displayName: 'Manager ID', filterable: true },
+      department: { type: 'string', displayName: 'Department', filterable: true },
+      designation: { type: 'string', displayName: 'Designation', filterable: true },
+      phone: { type: 'string', displayName: 'Phone', filterable: true },
+      active: { type: 'boolean', displayName: 'Active Status', filterable: true }
     },
     relationships: {
+      role_info: {
+        targetEntity: 'roles',
+        type: 'belongsTo',
+        localKey: 'role_code',
+        targetKey: 'code',
+        displayName: 'Assigned Role'
+      },
+      manager: {
+        targetEntity: 'users',
+        type: 'belongsTo',
+        localKey: 'manager_id',
+        targetKey: 'id',
+        displayName: 'Direct Supervisor'
+      },
+      subordinates: {
+        targetEntity: 'users',
+        type: 'hasMany',
+        localKey: 'id',
+        targetKey: 'manager_id',
+        displayName: 'Direct Reports'
+      },
       cutting_jobs: {
         targetEntity: 'cutting_jobs',
         type: 'hasMany',

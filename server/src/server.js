@@ -16,6 +16,7 @@ const financeRoutes = require('./routes/finance');
 const whatsappRoutes = require('./routes/whatsapp');
 const reportsRoutes = require('./routes/reports');
 const workflowsRoutes = require('./routes/workflows');
+const rolesRoutes = require('./routes/roles');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,6 +27,7 @@ app.use(requestLogger);
 
 // Mount API Modules
 app.use('/api/auth', authRoutes);
+app.use('/api/roles', rolesRoutes);
 app.use('/api/bom', bomRoutes);
 app.use('/api/purchasing', purchasingRoutes);
 app.use('/api/inventory', inventoryRoutes);

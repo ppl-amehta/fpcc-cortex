@@ -4,6 +4,89 @@ const db = require('../db');
 const { createToken, verifySecret, hashSecret } = require('../utils');
 const { authenticate } = require('../middleware/auth');
 const { AppError } = require('../middleware/errorHandler');
+const rolesService = require('../services/roles.service');
+
+/**
+ * POST /api/auth/login
+ * Full password/PIN authentication
+ */
+router.post('/login', (req, res, next) => {
+  try {
+    const { username, userId, password, pin } = req.body;
+    const identifier = userId || username;
+    const secret = password || pin;
+
+    if (!identifier || !secret) {
+      throw new AppError('Username/userId and password/pin are required', 400);
+    }
+
+    const authResult = rolesService.authenticateUser(identifier, secret);
+    if (!authResult.success) {
+      throw new AppError(authResult.error, 401);
+    }
+
+    res.json(authResult);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/switch-user
+ * Frictionless or password-protected user switcher
+ */
+router.post('/switch-user', (req, res, next) => {
+  try {
+    const { userId, password } = req.body;
+    if (!userId) {
+      throw new AppError('userId is required', 400);
+    }
+
+    const switchResult = rolesService.switchUser(userId, password);
+    if (!switchResult.success) {
+      return res.status(switchResult.passwordRequired ? 401 : 400).json(switchResult);
+    }
+
+    res.json(switchResult);
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/auth/settings
+ * Introspect auth requirements (e.g. requirePasswordAuth toggle)
+ */
+router.get('/settings', (req, res, next) => {
+  try {
+    res.json({
+      success: true,
+      requirePasswordAuth: rolesService.isPasswordRequired()
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/settings/toggle-password
+ * Toggle global password authentication requirement
+ */
+router.post('/settings/toggle-password', (req, res, next) => {
+  try {
+    const { enabled } = req.body;
+    const currentState = rolesService.setPasswordRequirement(Boolean(enabled));
+    res.json({
+      success: true,
+      requirePasswordAuth: currentState,
+      message: currentState
+        ? 'Password authentication is now strictly enforced on user switch.'
+        : 'Password authentication disabled. User switching is now frictionless.'
+    });
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
  * POST /api/auth/pin-login
@@ -25,26 +108,23 @@ router.post('/pin-login', (req, res, next) => {
       throw new AppError('User account is deactivated', 403);
     }
 
-    // Check PIN match (direct equality or hashed)
-    const isValid = verifySecret(pin, user.pin_code);
+    const isValid = verifySecret(pin, user.pin_code) || (user.password_hash && verifySecret(pin, user.password_hash));
     if (!isValid) {
       throw new AppError('Invalid PIN code', 401);
     }
 
-    // Generate zero-dependency JWT token
+    const profile = rolesService.getUserProfile(user.id);
     const token = createToken({
       id: user.id,
       userName: user.user_name,
-      role: user.role
-    }, 86400 * 7); // 7-day token for floor tablet persistence
-
-    // Return safe user object
-    const { pin_code, ...safeUser } = user;
+      role: user.role_code || user.role,
+      level: profile.role_level || 5
+    }, 86400 * 7);
 
     res.json({
       success: true,
       token,
-      user: safeUser
+      user: profile
     });
   } catch (err) {
     next(err);
@@ -53,25 +133,23 @@ router.post('/pin-login', (req, res, next) => {
 
 /**
  * GET /api/auth/me
- * Profile check for authenticated session
+ * Profile check for authenticated session with role permissions and hierarchy
  */
 router.get('/me', authenticate, (req, res) => {
-  const { pin_code, ...safeUser } = req.user;
+  const profile = rolesService.getUserProfile(req.user.id);
   res.json({
     success: true,
-    user: safeUser
+    user: profile || req.user
   });
 });
 
 /**
  * GET /api/auth/users
- * List active users for floor tablet selector
+ * List all active users with role, supervisor, and department
  */
 router.get('/users', (req, res, next) => {
   try {
-    const users = db.query(
-      'SELECT id, user_name, email, role, can_inward, can_issue, can_return, edit_master, can_block FROM users WHERE active = 1 ORDER BY role, user_name'
-    );
+    const users = rolesService.listUsers();
     res.json({
       success: true,
       count: users.length,

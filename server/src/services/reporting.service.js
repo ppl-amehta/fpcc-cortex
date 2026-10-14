@@ -28,10 +28,11 @@ class ReportingService {
    * @returns {object} Report results with data, columns metadata, and execution telemetry.
    */
   executeQuery(querySpec) {
-    if (!querySpec || !querySpec.baseEntity) {
-      throw new Error('Reporting query must provide a valid "baseEntity".');
+    const baseEntity = querySpec?.baseEntity || querySpec?.rootEntity;
+    if (!querySpec || !baseEntity) {
+      throw new Error('Reporting query must provide a valid "baseEntity" or "rootEntity".');
     }
-    return graphEngine.execute(querySpec);
+    return graphEngine.execute({ ...querySpec, baseEntity });
   }
 
   /**

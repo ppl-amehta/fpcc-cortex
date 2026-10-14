@@ -53,28 +53,29 @@
       </div>
     </div>
 
-    <!-- Active User & Sound Controls -->
+    <!-- Active User, Role Gating & Sound Controls -->
     <div class="flex items-center space-x-2 sm:space-x-3">
       <button id="soundToggleBtn" onclick="toggleAudio()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
         <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
-        <span class="hidden sm:inline font-medium">Audio Cues</span>
+        <span class="hidden sm:inline font-medium">Audio</span>
       </button>
 
+      <button onclick="openOrgHierarchyModal()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-amber-400 border border-amber-500/30 flex items-center gap-1.5 transition shadow-sm" title="View Organizational Hierarchy & Role Matrix">
+        <i data-lucide="network" class="w-4 h-4 text-amber-400"></i>
+        <span class="hidden md:inline font-bold">Hierarchy</span>
+      </button>
+
+      <!-- User Switcher Dropdown -->
       <div class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 shadow-inner">
-        <i data-lucide="user-check" class="w-4 h-4 text-indigo-400 ml-2"></i>
-        <select id="activeUserSelect" class="bg-transparent text-xs font-semibold text-slate-200 py-1 px-2 focus:outline-none cursor-pointer">
-          <!-- Populated from users API -->
-          <option value="usr-santosh">Santosh (Cutting Master)</option>
-          <option value="usr-ramesh">Ramesh (Runner)</option>
-          <option value="usr-mukesh">Mukesh (Runner)</option>
-          <option value="usr-suresh">Suresh (Stitching Supervisor)</option>
-          <option value="usr-dilip">Dilip (Finishing & QC)</option>
-          <option value="usr-rohit">Rohit (Packing Store)</option>
-          <option value="usr-aniket">Aniket (Stores)</option>
-          <option value="usr-meenakshi">Meenakshi (Merchandiser)</option>
-          <option value="usr-prashant">Prashant (Admin)</option>
-          <option value="usr-rimpy">Rimpy (SuperAdmin)</option>
+        <div id="userAvatarDot" class="w-2.5 h-2.5 rounded-full bg-purple-500 ml-2 animate-pulse"></div>
+        <select id="activeUserSelect" onchange="handleUserSwitcherChange(this.value)" class="bg-transparent text-xs font-semibold text-slate-200 py-1 px-2 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate">
+          <!-- Populated dynamically with optgroups from /api/auth/users -->
         </select>
+      </div>
+
+      <!-- Active User Role Badge & Reporting Line -->
+      <div id="activeUserRoleBadge" class="hidden lg:flex items-center gap-1.5">
+        <!-- Rendered dynamically -->
       </div>
     </div>
   </header>
@@ -2129,7 +2130,7 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
           </div>
 
           <div class="flex items-center gap-2">
-            <button onclick="openRecipeModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white flex items-center gap-1.5 shadow-lg shadow-yellow-600/25 transition">
+            <button id="btnCreateWorkflowRecipe" onclick="openRecipeModal()" class="px-4 py-2 rounded-xl text-xs font-bold bg-yellow-600 hover:bg-yellow-500 text-white flex items-center gap-1.5 shadow-lg shadow-yellow-600/25 transition">
               <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
               <span>+ Create Recipe</span>
             </button>
@@ -2357,11 +2358,143 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
   </div>
 
   <!-- ======================================================== -->
+  <!-- MODAL: ORGANIZATIONAL HIERARCHY & ROLE MANAGEMENT -->
+  <!-- ======================================================== -->
+  <div id="modalOrgHierarchy" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full p-6 shadow-2xl space-y-5 my-6 max-h-[92vh] flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-purple-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+            <i data-lucide="network" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-base sm:text-lg font-bold text-white tracking-tight">Enterprise Organizational Hierarchy & Roles</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Graph Integrated</span>
+            </div>
+            <p class="text-xs text-slate-400">5-Tier Reporting Matrix, Dynamic Role Gating & Security Authentication</p>
+          </div>
+        </div>
+        <button onclick="closeOrgHierarchyModal()" class="w-8 h-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition">✕</button>
+      </div>
+
+      <!-- Security & Password Authentication Control Bar -->
+      <div class="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <div id="passwordSecurityIcon" class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-white">Password Authentication Enforcer</span>
+              <span id="passwordSecurityBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Frictionless Testing Mode</span>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              When disabled, user switching is instantaneous for rapid factory staging. When enabled, requires PBKDF2/scrypt password or PIN verification before switching profiles.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 shrink-0">
+          <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" id="authPasswordToggle" onchange="handleTogglePasswordAuth(this.checked)" class="sr-only peer">
+            <div class="w-11 h-6 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+            <span class="ml-2 text-xs font-bold text-slate-300">Enforce Passwords</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Hierarchy / Role Matrix Tabs -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-2 shrink-0">
+        <button id="btnHierarchyTabTree" onclick="switchHierarchyView('tree')" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition">
+          5-Tier Hierarchy Tree
+        </button>
+        <button id="btnHierarchyTabMatrix" onclick="switchHierarchyView('matrix')" class="px-4 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          Role Permissions Matrix
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto space-y-4 pr-1">
+        <!-- Tab 1: 5-Tier Tree View -->
+        <div id="hierarchyViewTree" class="space-y-4">
+          <div id="hierarchyTreeContainer" class="space-y-4">
+            <!-- Populated dynamically via /api/roles/hierarchy -->
+          </div>
+        </div>
+
+        <!-- Tab 2: Permissions Matrix -->
+        <div id="hierarchyViewMatrix" class="hidden space-y-3">
+          <div id="hierarchyMatrixContainer" class="overflow-x-auto rounded-2xl border border-slate-800">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="pt-3 border-t border-slate-800 flex items-center justify-between shrink-0 text-xs text-slate-400">
+        <div>Archetype profiles seeded with default password: <code class="text-amber-400 font-mono">Pass@123</code></div>
+        <button onclick="closeOrgHierarchyModal()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-750 transition">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL: PASSWORD / PIN VERIFICATION -->
+  <!-- ======================================================== -->
+  <div id="modalPasswordVerification" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+            <i data-lucide="lock" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Security Verification</h3>
+            <p class="text-[11px] text-slate-400">Authentication required to switch user</p>
+          </div>
+        </div>
+        <button onclick="cancelPasswordModal()" class="text-slate-400 hover:text-white text-xs">✕</button>
+      </div>
+
+      <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-950 border border-slate-800">
+        <div id="pwModalUserAvatar" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm bg-purple-600">
+          U
+        </div>
+        <div class="space-y-0.5 min-w-0">
+          <div id="pwModalUserName" class="text-xs font-bold text-white truncate">User Name</div>
+          <div id="pwModalUserRole" class="text-[11px] text-slate-400 truncate">Role • Department</div>
+          <div id="pwModalManagerInfo" class="text-[10px] text-amber-400 truncate">Reports to: Manager</div>
+        </div>
+      </div>
+
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-300">Enter Password or PIN</label>
+        <input type="password" id="pwModalInput" placeholder="Enter password (default: Pass@123)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:ring-2 focus:ring-amber-500 focus:outline-none" onkeydown="if(event.key==='Enter') submitPasswordVerification()">
+        <p id="pwModalError" class="hidden text-[11px] text-rose-400 font-medium"></p>
+      </div>
+
+      <div class="pt-2 flex items-center justify-end gap-2">
+        <button onclick="cancelPasswordModal()" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-750 transition">Cancel</button>
+        <button onclick="submitPasswordVerification()" class="px-4 py-1.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-500 text-white flex items-center gap-1.5 transition">
+          <i data-lucide="unlock" class="w-3.5 h-3.5"></i>
+          <span>Verify & Switch</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
   <!-- JAVASCRIPT LOGIC & TIGHT VALIDATION ENGINE -->
   <!-- ======================================================== -->
   <script>
     // State Store
     const appState = {
+      currentUser: null,
+      allUsers: [],
+      requirePasswordAuth: false,
+      pendingSwitchUserId: null,
       masters: { users: [], vendors: [], clients: [], fabrics: [], colors: [], orders: [] },
       bundles: [],
       transits: [],
@@ -2425,8 +2558,576 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
       }
     }
 
+    // ========================================================
+    // ROLE MANAGEMENT, HIERARCHY & ROLE GATING ENGINE
+    // ========================================================
+
+    async function loadUsersAndRoles() {
+      try {
+        const [usersRes, settingsRes] = await Promise.all([
+          fetch('/api/auth/users'),
+          fetch('/api/auth/settings')
+        ]);
+        const usersJson = await usersRes.json();
+        const settingsJson = await settingsRes.json();
+
+        if (settingsJson && settingsJson.success) {
+          appState.requirePasswordAuth = Boolean(settingsJson.requirePasswordAuth);
+          updatePasswordToggleUI(appState.requirePasswordAuth);
+        }
+
+        if (usersJson && usersJson.success && usersJson.data) {
+          appState.allUsers = usersJson.data;
+          renderUserSwitcherDropdown(appState.allUsers);
+
+          // Get default / saved user
+          const savedUserId = localStorage.getItem('fpcc_active_user_id') || 'usr-rimpy';
+          const defaultUser = appState.allUsers.find(u => u.id === savedUserId) || appState.allUsers[0];
+          if (defaultUser) {
+            const selectEl = document.getElementById('activeUserSelect');
+            if (selectEl) selectEl.value = defaultUser.id;
+            await switchUserDirect(defaultUser.id, null, true); // true = silent initial load
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load users & roles:', err);
+      }
+    }
+
+    function renderUserSwitcherDropdown(users) {
+      const select = document.getElementById('activeUserSelect');
+      if (!select) return;
+
+      const tiers = [
+        { level: 1, label: '👑 Tier 1: Executive Management (God Mode)' },
+        { level: 2, label: '🏭 Tier 2: Plant Leadership & Merchandising' },
+        { level: 3, label: '💼 Tier 3: Department Officers' },
+        { level: 4, label: '⚙️ Tier 4: Floor Supervisors & Specialists' },
+        { level: 5, label: '🚚 Tier 5: Internal Logistics (Runners)' }
+      ];
+
+      let html = '';
+      tiers.forEach(tier => {
+        const tierUsers = users.filter(u => (u.role_level || 5) === tier.level);
+        if (tierUsers.length > 0) {
+          html += `<optgroup label="${tier.label}" class="bg-slate-900 text-slate-400 font-bold">`;
+          tierUsers.forEach(u => {
+            html += `<option value="${u.id}" class="bg-slate-900 text-white font-medium">${u.user_name} (${u.role_name || u.role})</option>`;
+          });
+          html += `</optgroup>`;
+        }
+      });
+      select.innerHTML = html;
+    }
+
+    function handleUserSwitcherChange(targetUserId) {
+      if (!targetUserId) return;
+      if (appState.currentUser && appState.currentUser.id === targetUserId) return;
+
+      if (appState.requirePasswordAuth) {
+        // Enforce password verification
+        appState.pendingSwitchUserId = targetUserId;
+        // Revert select dropdown to current user until verified
+        if (appState.currentUser) {
+          document.getElementById('activeUserSelect').value = appState.currentUser.id;
+        }
+        openPasswordModal(targetUserId);
+      } else {
+        // Frictionless switch
+        switchUserDirect(targetUserId);
+      }
+    }
+
+    async function switchUserDirect(targetUserId, password = null, silent = false) {
+      try {
+        const body = { userId: targetUserId };
+        if (password) body.password = password;
+
+        const res = await fetch('/api/auth/switch-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const json = await res.json();
+
+        if (json.passwordRequired) {
+          openPasswordModal(targetUserId, json.error);
+          return false;
+        }
+
+        if (json.success && json.user) {
+          appState.currentUser = json.user;
+          localStorage.setItem('fpcc_active_user_id', json.user.id);
+          if (json.token) localStorage.setItem('fpcc_token', json.token);
+
+          const sel = document.getElementById('activeUserSelect');
+          if (sel) sel.value = json.user.id;
+
+          // Apply role gating across UI
+          applyRoleGating(json.user);
+
+          if (!silent) {
+            playAudio('success');
+            showToast(`Switched to ${json.user.user_name} (${json.user.role_name || json.user.role_code})`, 'success');
+          }
+          return true;
+        } else {
+          if (!silent) {
+            playAudio('error');
+            alert(json.error || 'Failed to switch user');
+          }
+          return false;
+        }
+      } catch (err) {
+        console.error('Error switching user:', err);
+        if (!silent) alert('Network error switching user: ' + err.message);
+        return false;
+      }
+    }
+
+    function applyRoleGating(user) {
+      if (!user) return;
+
+      const allowedViews = user.allowed_views || ['*'];
+      const isGodMode = allowedViews.includes('*');
+
+      // 1. Navigation Tabs Visibility
+      const tabMappings = [
+        { id: 'radar', tabEl: 'tab-radar' },
+        { id: 'runner', tabEl: 'tab-runner' },
+        { id: 'cutting', tabEl: 'tab-cutting' },
+        { id: 'challan', tabEl: 'tab-challan' },
+        { id: 'floor', tabEl: 'tab-floor' },
+        { id: 'packing', tabEl: 'tab-packing' },
+        { id: 'inward', tabEl: 'tab-inward' },
+        { id: 'issue', tabEl: 'tab-issue' },
+        { id: 'crm', tabEl: 'tab-crm' },
+        { id: 'finance', tabEl: 'tab-finance' },
+        { id: 'whatsapp', tabEl: 'tab-whatsapp' },
+        { id: 'ledger', tabEl: 'tab-ledger' },
+        { id: 'reports', tabEl: 'tab-reports' },
+        { id: 'workflows', tabEl: 'tab-workflows' }
+      ];
+
+      const visibleTabIds = [];
+      tabMappings.forEach(item => {
+        const el = document.getElementById(item.tabEl);
+        const isAllowed = isGodMode || allowedViews.includes(item.id);
+        if (el) {
+          el.classList.toggle('hidden', !isAllowed);
+        }
+        if (isAllowed) visibleTabIds.push(item.id);
+      });
+
+      // 2. Ensure Current View is Allowed
+      let activeTabId = null;
+      document.querySelectorAll('section[id^="view-"]').forEach(sec => {
+        if (!sec.classList.contains('hidden')) {
+          activeTabId = sec.id.replace('view-', '');
+        }
+      });
+      if (!activeTabId || !visibleTabIds.includes(activeTabId)) {
+        const nextTab = visibleTabIds[0] || 'radar';
+        switchTab(nextTab);
+      }
+
+      // 3. Update Top Header Avatar & Role Badge
+      const avatarDot = document.getElementById('userAvatarDot');
+      if (avatarDot) {
+        avatarDot.style.backgroundColor = user.avatar_color || '#8b5cf6';
+      }
+
+      const roleBadge = document.getElementById('activeUserRoleBadge');
+      if (roleBadge) {
+        if (user.role_code === 'SUPER_ADMIN' || isGodMode) {
+          roleBadge.innerHTML = `
+            <span class="px-2.5 py-1 rounded-xl text-xs font-black bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm flex items-center gap-1.5 animate-pulse">
+              <i data-lucide="crown" class="w-3.5 h-3.5 text-amber-400"></i>
+              <span>God Mode</span>
+            </span>
+            <span class="text-[11px] text-slate-400 hidden xl:inline font-mono">Unrestricted</span>
+          `;
+        } else {
+          const mgrBadge = user.manager_name ? `<span class="text-[10px] text-amber-400 font-semibold bg-slate-800/90 px-2 py-0.5 rounded-lg border border-slate-700/80 flex items-center gap-1" title="Manager"><i data-lucide="corner-down-right" class="w-2.5 h-2.5"></i> ${user.manager_name}</span>` : '';
+          roleBadge.innerHTML = `
+            <span class="px-2 py-1 rounded-xl text-xs font-bold bg-slate-800 text-slate-200 border border-slate-700 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full" style="background-color: ${user.avatar_color || '#6366f1'}"></span>
+              <span>L${user.role_level}: ${user.role_name}</span>
+            </span>
+            ${mgrBadge}
+          `;
+        }
+      }
+
+      // 4. Filter Prebuilt Reports in Reports View
+      filterPrebuiltReportsForUser(user);
+
+      // 5. Restrict Workflow Automation Recipe Creation
+      const canManageWf = (user.permissions && user.permissions.includes('manage_workflows')) || isGodMode;
+      const btnCreateWf = document.getElementById('btnCreateWorkflowRecipe');
+      if (btnCreateWf) {
+        btnCreateWf.classList.toggle('hidden', !canManageWf);
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function filterPrebuiltReportsForUser(user) {
+      if (!user || !appState.reports.prebuiltList || !appState.reports.prebuiltList.length) return;
+      const allowedReports = user.allowed_reports || ['*'];
+      const isAll = allowedReports.includes('*');
+
+      const filtered = isAll
+        ? appState.reports.prebuiltList
+        : appState.reports.prebuiltList.filter(r => allowedReports.includes(r.key));
+
+      const sel = document.getElementById('prebuiltReportSelect');
+      if (sel) {
+        const curVal = sel.value;
+        sel.innerHTML = filtered.map(r => `<option value="${r.key}">${r.title}</option>`).join('');
+        if (filtered.some(r => r.key === curVal)) {
+          sel.value = curVal;
+        } else if (filtered.length > 0) {
+          sel.value = filtered[0].key;
+          const reportsView = document.getElementById('view-reports');
+          if (reportsView && !reportsView.classList.contains('hidden')) {
+            runReportByKey(filtered[0].key);
+          }
+        }
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      const existing = document.getElementById('fpccToast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'fpccToast';
+      toast.className = `fixed bottom-6 right-6 z-50 px-4 py-2.5 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-2xl transition-all duration-300 border ${
+        type === 'success'
+          ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40'
+          : type === 'error'
+          ? 'bg-rose-950/90 text-rose-300 border-rose-500/40'
+          : 'bg-slate-900/90 text-slate-200 border-slate-700'
+      }`;
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full ${type === 'success' ? 'bg-emerald-400' : type === 'error' ? 'bg-rose-400' : 'bg-cyan-400'} animate-ping"></span>
+        <span>${escapeHtml(message)}</span>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function openPasswordModal(targetUserId, initialError = '') {
+      const user = appState.allUsers.find(u => u.id === targetUserId);
+      if (!user) return;
+
+      const avatarEl = document.getElementById('pwModalUserAvatar');
+      avatarEl.textContent = user.user_name.charAt(0);
+      avatarEl.style.backgroundColor = user.avatar_color || '#8b5cf6';
+      document.getElementById('pwModalUserName').textContent = user.user_name;
+      document.getElementById('pwModalUserRole').textContent = `${user.role_name || user.role} • ${user.department || 'Operations'}`;
+      document.getElementById('pwModalManagerInfo').textContent = user.manager_name ? `Reports to: ${user.manager_name}` : 'Reports to: SuperAdmin / Board';
+
+      const input = document.getElementById('pwModalInput');
+      input.value = '';
+      const errEl = document.getElementById('pwModalError');
+      if (initialError) {
+        errEl.textContent = initialError;
+        errEl.classList.remove('hidden');
+      } else {
+        errEl.classList.add('hidden');
+      }
+
+      document.getElementById('modalPasswordVerification').classList.remove('hidden');
+      setTimeout(() => input.focus(), 50);
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function cancelPasswordModal() {
+      document.getElementById('modalPasswordVerification').classList.add('hidden');
+      document.getElementById('pwModalInput').value = '';
+      document.getElementById('pwModalError').classList.add('hidden');
+      appState.pendingSwitchUserId = null;
+      if (appState.currentUser) {
+        document.getElementById('activeUserSelect').value = appState.currentUser.id;
+      }
+    }
+
+    async function submitPasswordVerification() {
+      const password = document.getElementById('pwModalInput').value;
+      const errEl = document.getElementById('pwModalError');
+      if (!password) {
+        errEl.textContent = 'Please enter password or PIN (default: Pass@123)';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const success = await switchUserDirect(appState.pendingSwitchUserId, password);
+      if (success) {
+        document.getElementById('modalPasswordVerification').classList.add('hidden');
+        document.getElementById('pwModalInput').value = '';
+        document.getElementById('pwModalError').classList.add('hidden');
+        appState.pendingSwitchUserId = null;
+      } else {
+        errEl.textContent = 'Invalid password or PIN. Seed default is Pass@123';
+        errEl.classList.remove('hidden');
+      }
+    }
+
+    async function openOrgHierarchyModal() {
+      document.getElementById('modalOrgHierarchy').classList.remove('hidden');
+      updatePasswordToggleUI(appState.requirePasswordAuth);
+      await loadAndRenderHierarchy();
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeOrgHierarchyModal() {
+      document.getElementById('modalOrgHierarchy').classList.add('hidden');
+    }
+
+    function updatePasswordToggleUI(required) {
+      const toggle = document.getElementById('authPasswordToggle');
+      if (toggle) toggle.checked = Boolean(required);
+
+      const badge = document.getElementById('passwordSecurityBadge');
+      const icon = document.getElementById('passwordSecurityIcon');
+      if (badge && icon) {
+        if (required) {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30';
+          badge.textContent = 'Enforced Security Mode';
+          icon.className = 'w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center';
+        } else {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+          badge.textContent = 'Frictionless Testing Mode';
+          icon.className = 'w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center';
+        }
+      }
+    }
+
+    async function handleTogglePasswordAuth(enabled) {
+      try {
+        const res = await fetch('/api/auth/settings/toggle-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        const json = await res.json();
+        if (json.success) {
+          appState.requirePasswordAuth = json.requirePasswordAuth;
+          updatePasswordToggleUI(json.requirePasswordAuth);
+          playAudio('success');
+          showToast(`Password auth is now ${json.requirePasswordAuth ? 'ENFORCED' : 'DISABLED (Frictionless)'}`, 'info');
+        } else {
+          playAudio('error');
+          alert('Failed to update password requirement');
+        }
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function switchHierarchyView(viewName) {
+      const isTree = viewName === 'tree';
+      document.getElementById('hierarchyViewTree').classList.toggle('hidden', !isTree);
+      document.getElementById('hierarchyViewMatrix').classList.toggle('hidden', isTree);
+
+      document.getElementById('btnHierarchyTabTree').className = isTree
+        ? 'px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition'
+        : 'px-4 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btnHierarchyTabMatrix').className = !isTree
+        ? 'px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white transition'
+        : 'px-4 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+    }
+
+    async function loadAndRenderHierarchy() {
+      try {
+        const [hRes, rRes] = await Promise.all([
+          fetch('/api/roles/hierarchy'),
+          fetch('/api/roles')
+        ]);
+        const hJson = await hRes.json();
+        const rJson = await rRes.json();
+
+        if (hJson.success) {
+          renderHierarchyTree(hJson.tiers);
+        }
+        if (rJson.success) {
+          renderRolePermissionsMatrix(rJson.data);
+        }
+      } catch (err) {
+        console.error('Error loading hierarchy:', err);
+      }
+    }
+
+    function renderHierarchyTree(tiers) {
+      const container = document.getElementById('hierarchyTreeContainer');
+      if (!container || !tiers) return;
+
+      const tierHeaders = {
+        1: { name: 'Tier 1: Executive Management (God Mode)', color: 'text-purple-400', border: 'border-purple-500/30', bg: 'bg-purple-950/20' },
+        2: { name: 'Tier 2: Plant Leadership & Merchandising', color: 'text-blue-400', border: 'border-blue-500/30', bg: 'bg-blue-950/20' },
+        3: { name: 'Tier 3: Department Officers (Finance & Stores)', color: 'text-teal-400', border: 'border-teal-500/30', bg: 'bg-teal-950/20' },
+        4: { name: 'Tier 4: Floor Supervisors & Specialists', color: 'text-amber-400', border: 'border-amber-500/30', bg: 'bg-amber-950/20' },
+        5: { name: 'Tier 5: Internal Logistics (Runners)', color: 'text-cyan-400', border: 'border-cyan-500/30', bg: 'bg-cyan-950/20' }
+      };
+
+      let html = '';
+      tiers.forEach(tier => {
+        const meta = tierHeaders[tier.level] || { name: `Tier ${tier.level}`, color: 'text-slate-300', border: 'border-slate-800', bg: 'bg-slate-900' };
+        html += `
+          <div class="rounded-2xl border ${meta.border} ${meta.bg} p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
+              <h4 class="text-xs font-black uppercase tracking-wider ${meta.color} flex items-center gap-2">
+                <span>${meta.name}</span>
+                <span class="px-2 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-400 font-mono">${tier.roles.length} Roles</span>
+              </h4>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              ${tier.roles.map(role => {
+                const assignedUsers = role.users || [];
+                const allowedViews = role.allowed_views || [];
+                const isGod = allowedViews.includes('*');
+
+                const usersHtml = assignedUsers.map(u => `
+                  <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/80 border border-slate-800 text-xs">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <div class="w-6 h-6 rounded-full flex items-center justify-center font-bold text-white text-[10px]" style="background-color: ${u.avatar_color || '#6366f1'}">
+                        ${u.user_name.charAt(0)}
+                      </div>
+                      <div class="truncate">
+                        <div class="font-bold text-white truncate">${u.user_name}</div>
+                        <div class="text-[10px] text-slate-400 truncate">${u.designation || role.name}</div>
+                      </div>
+                    </div>
+                    <button onclick="handleHierarchySwitchUser('${u.id}')" class="px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 transition shrink-0 ml-2">
+                      Switch
+                    </button>
+                  </div>
+                `).join('');
+
+                return `
+                  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 space-y-2.5 shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                      <div>
+                        <div class="text-xs font-bold text-white">${role.name}</div>
+                        <div class="text-[10px] text-slate-400 font-medium">${role.department}</div>
+                      </div>
+                      <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${isGod ? 'bg-purple-500/20 text-purple-300' : 'bg-slate-800 text-slate-400'}">
+                        ${role.code}
+                      </span>
+                    </div>
+
+                    ${role.parent_role_code ? `
+                      <div class="text-[10px] text-amber-400/90 flex items-center gap-1 font-medium">
+                        <i data-lucide="corner-down-right" class="w-2.5 h-2.5"></i>
+                        <span>Reports to: <strong class="text-white">${role.parent_role_code}</strong></span>
+                      </div>
+                    ` : ''}
+
+                    <!-- Allowed Views Tags -->
+                    <div class="space-y-1">
+                      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Workspace Access</span>
+                      <div class="flex flex-wrap gap-1">
+                        ${isGod ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-300">All 14 Workstations (God Mode)</span>' : allowedViews.map(v => `<span class="px-1.5 py-0.2 rounded text-[9px] font-mono bg-slate-800 text-slate-300">${v}</span>`).join('')}
+                      </div>
+                    </div>
+
+                    <!-- Assigned Archetype Users -->
+                    <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
+                      <span class="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Assigned Archetypes (${assignedUsers.length})</span>
+                      <div class="space-y-1">
+                        ${usersHtml || '<span class="text-[11px] text-slate-600">No users assigned</span>'}
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function renderRolePermissionsMatrix(roles) {
+      const container = document.getElementById('hierarchyMatrixContainer');
+      if (!container || !roles) return;
+
+      let rows = roles.map(r => {
+        const allowedViews = r.allowed_views || [];
+        const isGod = allowedViews.includes('*');
+        const allowedReports = r.allowed_reports || [];
+        const isAllRep = allowedReports.includes('*');
+        const permissions = r.permissions || [];
+
+        return `
+          <tr class="border-b border-slate-800/60 hover:bg-slate-850/50 transition">
+            <td class="p-3 text-xs font-bold text-white whitespace-nowrap">
+              <div>${r.name}</div>
+              <div class="text-[10px] text-slate-400 font-mono">${r.code}</div>
+            </td>
+            <td class="p-3 text-xs font-mono font-bold text-cyan-400 whitespace-nowrap text-center">
+              L${r.level}
+            </td>
+            <td class="p-3 text-xs text-slate-300 whitespace-nowrap">
+              ${r.department}
+            </td>
+            <td class="p-3 text-xs text-slate-300 max-w-xs">
+              ${isGod ? '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-purple-500/20 text-purple-300">God Mode (All 14 Workstations)</span>' : allowedViews.map(v => `<span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-800 text-slate-300 mr-1 mb-1">${v}</span>`).join('')}
+            </td>
+            <td class="p-3 text-xs text-slate-300 max-w-xs">
+              ${isAllRep ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300">All Prebuilts (*)</span>' : allowedReports.map(rep => `<span class="inline-block px-1.5 py-0.2 rounded text-[10px] font-mono bg-amber-950/40 text-amber-400 border border-amber-500/20 mr-1 mb-1">${rep}</span>`).join('')}
+            </td>
+            <td class="p-3 text-xs text-slate-400 max-w-sm">
+              <div class="flex flex-wrap gap-1">
+                ${permissions.map(p => `<span class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-slate-950 text-slate-300 border border-slate-800">${p}</span>`).join('')}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-slate-950 text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-800">
+              <th class="p-3">Role Archetype</th>
+              <th class="p-3 text-center">Tier</th>
+              <th class="p-3">Department</th>
+              <th class="p-3">Allowed Workstations</th>
+              <th class="p-3">Allowed Graph Reports</th>
+              <th class="p-3">Granular Permissions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function handleHierarchySwitchUser(userId) {
+      closeOrgHierarchyModal();
+      document.getElementById('activeUserSelect').value = userId;
+      handleUserSwitcherChange(userId);
+    }
+
     // Workstation Tab Switching
     function switchTab(tabId) {
+      if (appState.currentUser) {
+        const allowedViews = appState.currentUser.allowed_views || ['*'];
+        if (!allowedViews.includes('*') && !allowedViews.includes(tabId)) {
+          showToast(`Access restricted: ${tabId} is outside role permissions`, 'error');
+          return;
+        }
+      }
       document.querySelectorAll('section[id^="view-"]').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
@@ -3872,12 +4573,9 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
           const pJson = await pRes.json();
           if (pJson.success) {
             appState.reports.prebuiltList = pJson.reports;
-            const sel = document.getElementById('prebuiltReportSelect');
-            if (sel) {
-              sel.innerHTML = pJson.reports.map(r => `<option value="${r.key}">${r.title}</option>`).join('');
-            }
           }
         }
+        filterPrebuiltReportsForUser(appState.currentUser);
         populateCustomQueryRoots();
 
         const sel = document.getElementById('prebuiltReportSelect');
@@ -4743,7 +5441,8 @@ You can interact directly with the factory floor via WhatsApp. Try sending:
 
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', async () => {
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
+      await loadUsersAndRoles();
       await loadMasters();
       await loadOperationsRadar();
       await loadTransitsList();
