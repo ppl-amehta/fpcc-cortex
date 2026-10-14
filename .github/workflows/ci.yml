@@ -38,9 +38,15 @@ jobs:
 
       - name: Start Server in Background
         run: |
-          cd server
-          node src/server.js &
-          sleep 3
+          nohup node server/src/server.js > server.log 2>&1 &
+          for i in {1..20}; do
+            if curl -s http://localhost:3000/api/health | grep -q "ok"; then
+              echo "Server is ready on port 3000!"
+              break
+            fi
+            echo "Waiting for server to start... ($i/20)"
+            sleep 1
+          done
 
       - name: Run Operational Flow Verification
         run: |
