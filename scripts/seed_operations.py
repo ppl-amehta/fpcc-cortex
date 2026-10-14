@@ -205,9 +205,27 @@ for size, packed_qty in [('S', 10), ('M', 20), ('L', 15), ('XL', 5)]:
         WHERE production_order_id = 'ord-26001' AND size_label = ?
     """, (packed_qty, size))
 
-# Advance order status to Stitching
-cur.execute("UPDATE production_orders SET status = 'Stitching' WHERE id = 'ord-26001'")
+# 7. Seed Standard Product BOM Recipe Templates
+bom_templates = [
+    ('bom-polo-matty', 'Apparel', 'Polo', 'Matty Polo T-Shirt with Collar Jacquard', 'md Terry collar', 0.22, 1, 1, 2, 3, 0.8, 2, 1, 8.0, 38.0, 12.0, 22.0, 5.0),
+    ('bom-roundneck-singlejersey', 'Apparel', 'Round_Neck', 'Combed Cotton Round Neck T-Shirt', 'Poly Sinker', 0.18, 0, 0, 0, 0, 0.6, 2, 1, 6.0, 24.0, 10.0, 18.0, 5.0),
+    ('bom-hoodie-loopknit', 'Apparel', 'Hoodie', 'Overhead Heavyweight Fleece Hoodie', 'Polar Fleece', 0.45, 0, 0, 0, 0, 1.2, 2, 1, 12.0, 55.0, 15.0, 30.0, 5.0),
+    ('bom-jacket-polarfleece', 'Apparel', 'Jacket', 'Full-Zip Polar Fleece Jacket', 'Polar Fleece', 0.42, 0, 0, 0, 0, 1.1, 2, 1, 14.0, 65.0, 18.0, 35.0, 5.0),
+    ('bom-joggers-loopknit', 'Apparel', 'Joggers', 'Slim-Fit Loopknit Track Joggers', 'Poly Sinker', 0.38, 0, 0, 0, 0, 0.9, 2, 1, 10.0, 45.0, 14.0, 20.0, 5.0)
+]
+
+for t in bom_templates:
+    cur.execute("""
+        INSERT OR REPLACE INTO product_bom_templates (
+            id, product_category, sub_category, product_name, default_fabric_name,
+            default_fabric_consumption_kg, has_collar_cuff, collar_pieces_per_pc,
+            cuff_pieces_per_pc, button_pieces_per_pc, thread_cones_per_100_pcs,
+            label_pieces_per_pc, polybag_per_pc, standard_cutting_rate,
+            standard_stitching_rate, standard_finishing_rate, standard_branding_rate,
+            rejection_buffer_pct
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, t)
 
 conn.commit()
 conn.close()
-print("[✓] Operational telemetry seeded successfully!")
+print("[✓] Operational telemetry and BOM templates seeded successfully!")
