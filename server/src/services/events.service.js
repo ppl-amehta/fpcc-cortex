@@ -20,9 +20,21 @@ const EVENTS = {
   PAYMENT_RECEIVED: 'PAYMENT_RECEIVED'
 };
 
+// Helper to dispatch event to the Graph Workflow Engine
+function dispatchWorkflow(triggerEntity, triggerEvent, recordIdentifier, payload) {
+  try {
+    const workflowService = require('./workflows/workflow.service');
+    workflowService.evaluateTriggers(triggerEntity, triggerEvent, recordIdentifier, payload).catch(err => {
+      console.error(`[WorkflowService] Error evaluating trigger ${triggerEntity}:${triggerEvent}:`, err.message);
+    });
+  } catch (err) {
+    console.error(`[WorkflowService] Could not invoke workflowService:`, err.message);
+  }
+}
+
 // Internal Reactive Event Listeners (Rippling-esque Automations)
 
-// 1. When an Order is created -> Log audit & verify BOM allocations
+// 1. When an Order is created -> Log audit & dispatch graph workflows
 eventBus.on(EVENTS.ORDER_CREATED, (payload) => {
   try {
     db.audit(
@@ -36,6 +48,8 @@ eventBus.on(EVENTS.ORDER_CREATED, (payload) => {
       { orderNo: payload.productionOrderNo, qty: payload.totalQty },
       `Production Order booked with ${payload.totalQty} pieces.`
     );
+
+    dispatchWorkflow('orders', 'CREATE', payload.productionOrderNo, payload);
   } catch (err) {
     console.error('Error handling ORDER_CREATED event:', err);
   }
@@ -72,12 +86,14 @@ eventBus.on(EVENTS.RUNNER_DISCREPANCY, (payload) => {
         message_body, related_entity_type, related_entity_id, status
       ) VALUES (?, 'OUTBOUND', '919822233445', 'Floor Manager', 'RUNNER_ALERT', ?, 'Transit', ?, 'DELIVERED')
     `, [`wa-disc-${Date.now()}`, alertBody, payload.transitPassNo]);
+
+    dispatchWorkflow('transits', 'STATUS_CHANGE', payload.transitPassNo, payload);
   } catch (err) {
     console.error('Error handling RUNNER_DISCREPANCY event:', err);
   }
 });
 
-// 3. When Subcontractor defects occur -> Create Debit Note and if rejections > buffer, queue Remake
+// 3. When Subcontractor defects occur -> Dispatch workflow engine & create debit notes
 eventBus.on(EVENTS.SUBCONTRACTOR_REJECTION, (payload) => {
   try {
     const { challanNo, vendorId, vendorName, productionOrderNo, rejectionQty, rejectionReason, defectPhotoUrl } = payload;
@@ -96,6 +112,9 @@ eventBus.on(EVENTS.SUBCONTRACTOR_REJECTION, (payload) => {
       `dn-${Date.now()}`, dnNo, vendorId, vendorName, challanNo, productionOrderNo,
       rejectionQty, panelUnitCost, totalDebit, rejectionReason || 'Vendor Defect', defectPhotoUrl || null
     ]);
+
+    // Dispatch to workflow engine for dynamic cross-graph recipes
+    dispatchWorkflow('challans', 'UPDATE', challanNo, payload);
 
     // If rejections are severe (> 10 pcs), auto-queue Remake Work Order
     if (rejectionQty >= 10) {
@@ -125,7 +144,36 @@ eventBus.on(EVENTS.SUBCONTRACTOR_REJECTION, (payload) => {
   }
 });
 
+// 4. Cutting Completed Event
+eventBus.on(EVENTS.CUTTING_COMPLETED, (payload) => {
+  if (payload.cutJobNo) {
+    dispatchWorkflow('cutting_jobs', 'CREATE', payload.cutJobNo, payload);
+  }
+});
+
+// 5. Carton Sealed Event
+eventBus.on(EVENTS.CARTON_SEALED, (payload) => {
+  if (payload.cartonNo) {
+    dispatchWorkflow('cartons', 'CREATE', payload.cartonNo, payload);
+  }
+});
+
+// 6. Invoice Generated Event
+eventBus.on(EVENTS.INVOICE_GENERATED, (payload) => {
+  if (payload.invoiceNo) {
+    dispatchWorkflow('invoices', 'CREATE', payload.invoiceNo, payload);
+  }
+});
+
+// 7. Payment Received Event
+eventBus.on(EVENTS.PAYMENT_RECEIVED, (payload) => {
+  if (payload.invoiceNo) {
+    dispatchWorkflow('invoices', 'UPDATE', payload.invoiceNo, payload);
+  }
+});
+
 module.exports = {
   eventBus,
-  EVENTS
+  EVENTS,
+  dispatchWorkflow
 };

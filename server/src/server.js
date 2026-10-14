@@ -15,6 +15,7 @@ const crmRoutes = require('./routes/crm');
 const financeRoutes = require('./routes/finance');
 const whatsappRoutes = require('./routes/whatsapp');
 const reportsRoutes = require('./routes/reports');
+const workflowsRoutes = require('./routes/workflows');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +35,7 @@ app.use('/api/crm', crmRoutes);
 app.use('/api/finance', financeRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/workflows', workflowsRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

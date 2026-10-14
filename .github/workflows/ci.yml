@@ -70,3 +70,7 @@ jobs:
       - name: Run Unified Graph & Modular Reporting Verification
         run: |
           python3 scripts/test_unified_graph_reporting.py
+
+      - name: Run Graph Workflows & Modular Triggers Verification
+        run: |
+          python3 scripts/test_graph_workflows.py

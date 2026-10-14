@@ -598,3 +598,39 @@ CREATE INDEX IF NOT EXISTS idx_debit_challan ON debit_notes(challan_no);
 CREATE INDEX IF NOT EXISTS idx_ocr_order ON order_completion_reports(production_order_no);
 CREATE INDEX IF NOT EXISTS idx_audit_category ON audit_trail(event_category);
 CREATE INDEX IF NOT EXISTS idx_audit_time ON audit_trail(event_time);
+
+-- 9. WORKFLOW RULES & EVENT RECIPES (Rippling-Style Modular Triggers)
+CREATE TABLE IF NOT EXISTS workflow_rules (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    category TEXT DEFAULT 'Operations',
+    enabled INTEGER NOT NULL DEFAULT 1,
+    trigger_entity TEXT NOT NULL,
+    trigger_event TEXT NOT NULL,
+    conditions_json TEXT NOT NULL,
+    actions_json TEXT NOT NULL,
+    execution_count INTEGER DEFAULT 0,
+    last_triggered_at DATETIME,
+    created_by TEXT REFERENCES users(id),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS workflow_execution_logs (
+    id TEXT PRIMARY KEY,
+    rule_id TEXT NOT NULL REFERENCES workflow_rules(id) ON DELETE CASCADE,
+    rule_name TEXT NOT NULL,
+    trigger_entity TEXT NOT NULL,
+    trigger_record_id TEXT NOT NULL,
+    conditions_matched INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('SUCCESS', 'FAILED', 'SKIPPED_CONDITIONS')),
+    actions_executed_json TEXT,
+    error_message TEXT,
+    execution_time_ms INTEGER NOT NULL,
+    executed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_workflow_rules_entity ON workflow_rules(trigger_entity, enabled);
+CREATE INDEX IF NOT EXISTS idx_workflow_logs_rule ON workflow_execution_logs(rule_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_logs_time ON workflow_execution_logs(executed_at);
