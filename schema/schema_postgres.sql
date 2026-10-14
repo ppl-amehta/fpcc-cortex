@@ -159,3 +159,209 @@ CREATE INDEX IF NOT EXISTS idx_pg_parent_code ON parent_inward_lots(parent_code)
 CREATE INDEX IF NOT EXISTS idx_pg_bundle_code ON fabric_bundles(bundle_code);
 CREATE INDEX IF NOT EXISTS idx_pg_ledger_parent ON inventory_stock_ledger(parent_code);
 CREATE INDEX IF NOT EXISTS idx_pg_ledger_order ON inventory_stock_ledger(production_order_no);
+
+-- Operations & Telemetry
+CREATE TABLE IF NOT EXISTS cutting_jobs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cut_job_no VARCHAR(50) NOT NULL UNIQUE,
+    production_order_no VARCHAR(50) NOT NULL,
+    bundle_code VARCHAR(60) NOT NULL,
+    cutter_id UUID NOT NULL REFERENCES users(id),
+    lay_no INT DEFAULT 1,
+    lay_length_meters NUMERIC(8, 2),
+    plies_count INT,
+    sample_palla_pcs INT NOT NULL,
+    sample_palla_weight_kg NUMERIC(8, 3) NOT NULL,
+    calculated_palla_avg_kg NUMERIC(8, 4) NOT NULL,
+    total_fabric_weight_used_kg NUMERIC(10, 3) NOT NULL,
+    total_pcs_cut INT NOT NULL,
+    size_breakdown_json JSONB NOT NULL,
+    actual_consumption_per_pc NUMERIC(8, 4) NOT NULL,
+    target_bom_consumption NUMERIC(8, 4),
+    variance_pct NUMERIC(6, 2),
+    remarks TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS material_transits (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    transit_pass_no VARCHAR(50) NOT NULL UNIQUE,
+    production_order_no VARCHAR(50) NOT NULL,
+    source_station VARCHAR(100) NOT NULL,
+    dest_station VARCHAR(100) NOT NULL,
+    runner_id UUID NOT NULL REFERENCES users(id),
+    item_type VARCHAR(50) NOT NULL,
+    item_ref VARCHAR(100),
+    dispatched_qty INT NOT NULL,
+    dispatched_by UUID NOT NULL REFERENCES users(id),
+    dispatched_at TIMESTAMPTZ DEFAULT NOW(),
+    picked_up_at TIMESTAMPTZ,
+    received_qty INT,
+    received_by UUID REFERENCES users(id),
+    received_at TIMESTAMPTZ,
+    transit_status VARCHAR(50) NOT NULL DEFAULT 'DISPATCHED',
+    variance_qty INT DEFAULT 0,
+    discrepancy_reason TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS subcontractor_challans (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    challan_no VARCHAR(50) NOT NULL UNIQUE,
+    production_order_no VARCHAR(50) NOT NULL,
+    vendor_id UUID NOT NULL REFERENCES entities(id),
+    process_type VARCHAR(50) NOT NULL DEFAULT 'Branding',
+    branding_type VARCHAR(50),
+    panel_name VARCHAR(50) NOT NULL,
+    qty_sent INT NOT NULL,
+    date_sent TIMESTAMPTZ DEFAULT NOW(),
+    expected_eta DATE,
+    qty_received INT DEFAULT 0,
+    actual_received_date TIMESTAMPTZ,
+    rejection_qty INT DEFAULT 0,
+    rejection_reason TEXT,
+    rework_qty INT DEFAULT 0,
+    defect_photo_url TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'Dispatched',
+    created_by UUID REFERENCES users(id),
+    received_by UUID REFERENCES users(id),
+    remarks TEXT
+);
+
+CREATE TABLE IF NOT EXISTS floor_process_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    production_order_no VARCHAR(50) NOT NULL,
+    process_name VARCHAR(50) NOT NULL,
+    operator_id UUID NOT NULL REFERENCES users(id),
+    station_code VARCHAR(50),
+    log_date DATE DEFAULT CURRENT_DATE,
+    completed_qty INT NOT NULL,
+    rejected_qty INT DEFAULT 0,
+    rework_qty INT DEFAULT 0,
+    defect_category VARCHAR(100),
+    size_breakdown_json JSONB,
+    remarks TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS carton_packings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    carton_no VARCHAR(50) NOT NULL UNIQUE,
+    production_order_no VARCHAR(50) NOT NULL,
+    box_type VARCHAR(100) DEFAULT '7-Ply Master Carton',
+    gross_weight_kg NUMERIC(8, 3),
+    size_breakdown_json JSONB NOT NULL,
+    total_pcs INT NOT NULL,
+    packed_by UUID NOT NULL REFERENCES users(id),
+    status VARCHAR(50) DEFAULT 'Sealed',
+    destination_address TEXT,
+    remarks TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- CRM Leads & Inquiries
+CREATE TABLE IF NOT EXISTS crm_inquiries (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    inquiry_no VARCHAR(50) NOT NULL UNIQUE,
+    client_id UUID REFERENCES entities(id),
+    client_name VARCHAR(200) NOT NULL,
+    contact_person VARCHAR(150),
+    phone VARCHAR(30) NOT NULL,
+    email VARCHAR(150),
+    category VARCHAR(50) NOT NULL DEFAULT 'Apparel',
+    sub_category VARCHAR(50) NOT NULL DEFAULT 'Polo',
+    product_name VARCHAR(200) NOT NULL,
+    target_qty INT NOT NULL,
+    target_budget_per_pc NUMERIC(10, 2),
+    status VARCHAR(50) NOT NULL DEFAULT 'New',
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Costing & Quotations (4x MRP)
+CREATE TABLE IF NOT EXISTS quotations_costing (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    quotation_no VARCHAR(50) NOT NULL UNIQUE,
+    inquiry_id UUID REFERENCES crm_inquiries(id),
+    client_id UUID REFERENCES entities(id),
+    client_name VARCHAR(200) NOT NULL,
+    product_name VARCHAR(200) NOT NULL,
+    color_name VARCHAR(100) NOT NULL,
+    sample_no VARCHAR(50),
+    qty INT NOT NULL,
+    fabric_rate_per_kg NUMERIC(10, 2) NOT NULL DEFAULT 340.0,
+    fabric_avg_kg_per_pc NUMERIC(8, 4) NOT NULL DEFAULT 0.220,
+    fabric_cost_per_pc NUMERIC(10, 2) NOT NULL,
+    accessories_cost_per_pc NUMERIC(10, 2) DEFAULT 15.0,
+    cutting_cost_per_pc NUMERIC(10, 2) DEFAULT 8.0,
+    stitching_cost_per_pc NUMERIC(10, 2) DEFAULT 35.0,
+    finishing_cost_per_pc NUMERIC(10, 2) DEFAULT 12.0,
+    branding_cost_per_pc NUMERIC(10, 2) DEFAULT 25.0,
+    rejection_buffer_pct NUMERIC(5, 2) DEFAULT 5.0,
+    total_production_cost NUMERIC(10, 2) NOT NULL,
+    target_mrp NUMERIC(10, 2) NOT NULL,
+    selling_price_per_pc NUMERIC(10, 2) NOT NULL,
+    tax_rate_pct NUMERIC(5, 2) NOT NULL DEFAULT 5.0,
+    tax_billing VARCHAR(20) NOT NULL DEFAULT 'extra',
+    tax_amount_per_pc NUMERIC(10, 2) NOT NULL,
+    profit_inr_per_pc NUMERIC(10, 2) NOT NULL,
+    profit_pct NUMERIC(6, 2) NOT NULL,
+    total_order_value_inr NUMERIC(12, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'Approved',
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Invoices & Sales Billing
+CREATE TABLE IF NOT EXISTS invoices (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    invoice_no VARCHAR(50) NOT NULL UNIQUE,
+    production_order_no VARCHAR(50) NOT NULL,
+    client_id UUID NOT NULL REFERENCES entities(id),
+    client_name VARCHAR(200) NOT NULL,
+    invoice_date DATE DEFAULT CURRENT_DATE,
+    due_date DATE,
+    subtotal_amount NUMERIC(12, 2) NOT NULL,
+    gst_rate_pct NUMERIC(5, 2) NOT NULL DEFAULT 5.0,
+    gst_amount NUMERIC(12, 2) NOT NULL,
+    freight_amount NUMERIC(10, 2) DEFAULT 0.0,
+    total_amount NUMERIC(12, 2) NOT NULL,
+    amount_paid NUMERIC(12, 2) DEFAULT 0.0,
+    balance_due NUMERIC(12, 2) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL DEFAULT 'Unpaid',
+    e_way_bill_no VARCHAR(50),
+    carrier VARCHAR(100),
+    docket_no VARCHAR(50),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Payments
+CREATE TABLE IF NOT EXISTS payments (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    payment_no VARCHAR(50) NOT NULL UNIQUE,
+    invoice_id UUID NOT NULL REFERENCES invoices(id),
+    client_id UUID NOT NULL REFERENCES entities(id),
+    payment_date DATE DEFAULT CURRENT_DATE,
+    amount NUMERIC(12, 2) NOT NULL,
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'NEFT_RTGS',
+    reference_no VARCHAR(100),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- WhatsApp Logs
+CREATE TABLE IF NOT EXISTS whatsapp_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    direction VARCHAR(20) NOT NULL,
+    phone_number VARCHAR(30) NOT NULL,
+    recipient_name VARCHAR(150),
+    message_type VARCHAR(50) NOT NULL,
+    template_name VARCHAR(100),
+    message_body TEXT NOT NULL,
+    related_entity_type VARCHAR(50),
+    related_entity_id VARCHAR(50),
+    status VARCHAR(30) NOT NULL DEFAULT 'DELIVERED',
+    response_payload JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);

@@ -114,6 +114,18 @@
       <i data-lucide="arrow-up-right" class="w-4 h-4 text-rose-400"></i>
       <span>Issue & Return</span>
     </button>
+    <button onclick="switchTab('crm')" id="tab-crm" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="briefcase" class="w-4 h-4 text-blue-400"></i>
+      <span>CRM & Orders</span>
+    </button>
+    <button onclick="switchTab('finance')" id="tab-finance" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="calculator" class="w-4 h-4 text-emerald-400"></i>
+      <span>Finance & 4x Costing</span>
+    </button>
+    <button onclick="switchTab('whatsapp')" id="tab-whatsapp" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="message-square" class="w-4 h-4 text-green-400"></i>
+      <span>WhatsApp ChatOps</span>
+    </button>
     <button onclick="switchTab('ledger')" id="tab-ledger" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
       <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
       <span>Stock Ledger</span>
@@ -1124,6 +1136,784 @@
       </div>
     </section>
 
+    <!-- ======================================================== -->
+    <!-- VIEW 10: LEAN CRM & NATIVE ORDER TAKING (ZOHO REPLACEMENT) -->
+    <!-- ======================================================== -->
+    <section id="view-crm" class="hidden space-y-6">
+      
+      <!-- Sub-Navigation for CRM -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button onclick="switchCrmSubTab('order')" id="btn-sub-crm-order" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition">
+          1. Native Order Entry (Zoho Replacement)
+        </button>
+        <button onclick="switchCrmSubTab('inquiry')" id="btn-sub-crm-inquiry" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          2. Inquiries Pipeline (<span id="crmInquiryCountBadge">0</span>)
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Native Order Entry -->
+      <div id="crm-sub-order" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs font-bold">NATIVE ORDER INTAKE</span>
+              Book Production Order & Client Specs
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Captures client master, size breakdown grid, and dispatches automated WhatsApp booking confirmation</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+            <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+            WhatsApp Auto-Ack Enabled
+          </span>
+        </div>
+
+        <form id="nativeOrderForm" onsubmit="handleNativeOrderSubmit(event)" class="space-y-5">
+          <!-- Client Details -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+              <i data-lucide="user" class="w-4 h-4"></i>
+              Client Commercial Master
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Client Company Name <span class="text-rose-400">*</span></label>
+                <input type="text" id="orderClientName" required placeholder="e.g. Cred Tech Merch"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Contact Person</label>
+                <input type="text" id="orderContactPerson" placeholder="e.g. Aman Gupta"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Client WhatsApp Phone <span class="text-rose-400">*</span></label>
+                <input type="text" id="orderPhone" required placeholder="e.g. +91 98222 33445"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-emerald-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Email Address</label>
+                <input type="email" id="orderEmail" placeholder="e.g. orders@cred.club"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">GSTIN Number</label>
+                <input type="text" id="orderGstin" placeholder="e.g. 29AABCC1234F1Z8"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-mono uppercase text-slate-200 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Billing & Delivery Address</label>
+                <input type="text" id="orderAddress" placeholder="e.g. Cred Campus, Indiranagar, Bengaluru, KA"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Product & Order Specifications -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-1.5">
+              <i data-lucide="tag" class="w-4 h-4"></i>
+              Product & Commercial Terms
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Category</label>
+                <select id="orderCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                  <option value="Apparel">Apparel / Knits</option>
+                  <option value="Merchandise">Merchandise / Bags</option>
+                  <option value="Uniforms">Corporate Uniforms</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Sub-Category</label>
+                <select id="orderSubCategory" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                  <option value="Polo">Matty / Pique Polo</option>
+                  <option value="Crewneck">Round Neck T-Shirt</option>
+                  <option value="Hoodie">Overhead Hoodie</option>
+                  <option value="Jacket">Polar Fleece Jacket</option>
+                  <option value="Joggers">Loopknit Joggers</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Product Name <span class="text-rose-400">*</span></label>
+                <input type="text" id="orderProductName" required placeholder="e.g. 240 GSM Bio Matty Polo"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Color Shade <span class="text-rose-400">*</span></label>
+                <input type="text" id="orderColorName" required placeholder="e.g. Anthra Melange / Navy"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-indigo-400 focus:outline-none">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Agreed Selling Price / pc (₹) <span class="text-rose-400">*</span></label>
+                <input type="number" step="0.5" id="orderUnitPrice" required placeholder="e.g. 420.0"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-emerald-400 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Target Dispatch ETD <span class="text-rose-400">*</span></label>
+                <input type="date" id="orderTargetEtd" required
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Freight Terms</label>
+                <select id="orderFreightTerms" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                  <option value="paid_by_client">To-Pay (Paid by Client)</option>
+                  <option value="billed_in_invoice">Billed on Invoice</option>
+                  <option value="foc_fpcc">FPCC Borne (Free Delivery)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Size Breakdown Matrix -->
+          <div class="bg-slate-950 border border-blue-500/30 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                <i data-lucide="grid" class="w-4 h-4"></i>
+                Size Breakdown Matrix
+              </h3>
+              <div class="text-xs font-semibold text-slate-300">
+                Total Order Pieces: <strong id="orderMatrixTotalDisplay" class="text-lg font-black text-blue-400 ml-1">0 pcs</strong>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-3 sm:grid-cols-7 gap-3">
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XS</label>
+                <input type="number" min="0" id="matrix_XS" value="0" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">S</label>
+                <input type="number" min="0" id="matrix_S" value="50" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">M</label>
+                <input type="number" min="0" id="matrix_M" value="150" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">L</label>
+                <input type="number" min="0" id="matrix_L" value="150" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XL</label>
+                <input type="number" min="0" id="matrix_XL" value="100" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">2XL</label>
+                <input type="number" min="0" id="matrix_2XL" value="50" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">3XL</label>
+                <input type="number" min="0" id="matrix_3XL" value="0" oninput="updateOrderMatrixTotal()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Branding & Production Notes</label>
+            <input type="text" id="orderComments" placeholder="e.g. White tipping on ribbed collar; Left chest high-density silicone logo print."
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-7 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white font-black text-sm flex items-center gap-2.5 shadow-lg shadow-indigo-600/30 transition transform active:scale-95">
+              <i data-lucide="check-circle" class="w-5 h-5"></i>
+              <span>BOOK PRODUCTION ORDER & DISPATCH WHATSAPP ACK</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Sub-Tab 2: Inquiries Pipeline -->
+      <div id="crm-sub-inquiry" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold">PIPELINE</span>
+              Inbound Inquiries & Lead Conversion
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Rapid intake of client inquiries with conversion tracking</p>
+          </div>
+          <button onclick="loadCrmInquiries()" class="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1 font-semibold">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Inquiries
+          </button>
+        </div>
+
+        <!-- Quick Inquiry Form -->
+        <form id="newInquiryForm" onsubmit="handleInquirySubmit(event)" class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            Quick Inquiry Intake
+          </h3>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Client Name *</label>
+              <input type="text" id="inqClient" required placeholder="e.g. Swiggy Instamart" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">WhatsApp Phone *</label>
+              <input type="text" id="inqPhone" required placeholder="e.g. 9812345678" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Product Description *</label>
+              <input type="text" id="inqProduct" required placeholder="e.g. Oversized Heavy Drop-Shoulder Tee" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-400 mb-1">Target Qty (pcs) *</label>
+              <input type="number" id="inqQty" required placeholder="e.g. 300" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-amber-400">
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2 bg-amber-600 hover:bg-amber-500 rounded-lg text-xs font-bold text-white transition flex items-center justify-center gap-1">
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                Add Inquiry
+              </button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Inquiries Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="text-slate-400 uppercase bg-slate-950 rounded-xl">
+              <tr>
+                <th class="py-2.5 px-3">Inquiry No</th>
+                <th class="py-2.5 px-3">Client</th>
+                <th class="py-2.5 px-3">Phone</th>
+                <th class="py-2.5 px-3">Product</th>
+                <th class="py-2.5 px-3">Qty</th>
+                <th class="py-2.5 px-3">Budget</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inquiriesTableBody" class="divide-y divide-slate-850">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 11: FINANCE, 4x MRP COSTING & ACCOUNTS RECEIVABLE -->
+    <!-- ======================================================== -->
+    <section id="view-finance" class="hidden space-y-6">
+      
+      <!-- Financial Top KPI Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+          <span class="text-xs text-slate-400 uppercase font-semibold block">Total Invoiced</span>
+          <span id="finTotalInvoiced" class="text-xl sm:text-2xl font-black text-white font-mono mt-1 block">₹0.00</span>
+          <span class="text-[11px] text-slate-500 mt-1 block">Cumulative Billings</span>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+          <span class="text-xs text-slate-400 uppercase font-semibold block">Collections Received</span>
+          <span id="finTotalCollected" class="text-xl sm:text-2xl font-black text-emerald-400 font-mono mt-1 block">₹0.00</span>
+          <span class="text-[11px] text-emerald-500/80 mt-1 block">Bank Reconciled</span>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+          <span class="text-xs text-slate-400 uppercase font-semibold block">Accounts Receivable</span>
+          <span id="finTotalAr" class="text-xl sm:text-2xl font-black text-rose-400 font-mono mt-1 block">₹0.00</span>
+          <span id="finUnpaidInvoicesCount" class="text-[11px] text-rose-400/80 mt-1 block">0 Unpaid Invoices</span>
+        </div>
+
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-sm">
+          <span class="text-xs text-slate-400 uppercase font-semibold block">Costing Target</span>
+          <span class="text-xl sm:text-2xl font-black text-amber-400 font-mono mt-1 block">4.0x MRP</span>
+          <span class="text-[11px] text-amber-500/80 mt-1 block">Indian GST 5% / 12% Tiers</span>
+        </div>
+      </div>
+
+      <!-- Sub-Navigation for Finance -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button onclick="switchFinanceSubTab('costing')" id="btn-sub-fin-costing" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white transition">
+          1. Dynamic Costing & 4x MRP Simulator
+        </button>
+        <button onclick="switchFinanceSubTab('invoices')" id="btn-sub-fin-invoices" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          2. Tax Invoices & Payments Ledger
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Costing Simulator -->
+      <div id="fin-sub-costing" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">COSTING ENGINE</span>
+            Bill of Materials & 4x MRP Pricing Calculator
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Automates fabric consumption, direct manufacturing overheads, rejection buffer, 4x MRP and GST pricing</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          <!-- Left: Input Controls -->
+          <div class="lg:col-span-2 space-y-4">
+            <!-- Fabric Cost Component -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                1. Fabric Raw Material Math
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Fabric Rate (₹ / kg)</label>
+                  <input type="number" step="1" id="cost_fabRate" value="340" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Fabric Avg (kg / pc)</label>
+                  <input type="number" step="0.005" id="cost_fabAvg" value="0.220" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-bold text-amber-400">
+                </div>
+                <div class="bg-slate-900 rounded-lg p-2.5 border border-slate-800 flex flex-col justify-center">
+                  <span class="text-[10px] text-slate-400 uppercase">Calculated Fabric Cost</span>
+                  <span id="cost_fabCostDisplay" class="text-base font-black text-amber-400">₹74.80 / pc</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Direct Manufacturing Overheads -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-1.5">
+                <i data-lucide="cpu" class="w-4 h-4"></i>
+                2. Manufacturing Operations (₹ / pc)
+              </h3>
+              <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Cutting</label>
+                  <input type="number" step="0.5" id="cost_cutting" value="8" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Stitching</label>
+                  <input type="number" step="0.5" id="cost_stitching" value="35" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Branding</label>
+                  <input type="number" step="0.5" id="cost_branding" value="25" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Finishing</label>
+                  <input type="number" step="0.5" id="cost_finishing" value="12" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Trims/Poly</label>
+                  <input type="number" step="0.5" id="cost_accessories" value="15" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                </div>
+              </div>
+            </div>
+
+            <!-- Commercial Margins & Selling Price -->
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                <i data-lucide="tag" class="w-4 h-4"></i>
+                3. Commercial Selling Price & GST
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Rejection Buffer %</label>
+                  <input type="number" step="0.5" id="cost_buffer" value="5.0" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Client Quote SP (₹ / pc)</label>
+                  <input type="number" step="1" id="cost_sellingPrice" value="395" oninput="runCostingCalculation()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm font-black text-emerald-400">
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-400 mb-1">Tax Billing</label>
+                  <select id="cost_taxBilling" onchange="runCostingCalculation()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200">
+                    <option value="extra">GST Extra (Client Pays)</option>
+                    <option value="included">GST Inclusive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: 4x MRP & Profit Analysis Card -->
+          <div class="bg-slate-950 border border-emerald-500/30 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-lg">
+            <div>
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">CORTEX PRICING RADAR</span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">4X FORMULA</span>
+              </div>
+
+              <div class="space-y-3 mt-4 text-xs">
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>Direct Cost / pc:</span>
+                  <strong id="card_directCost" class="font-mono text-white text-sm">₹169.80</strong>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>Rejection Buffered Cost:</span>
+                  <strong id="card_totalProdCost" class="font-mono text-white text-sm">₹178.29</strong>
+                </div>
+
+                <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-1">
+                  <span class="text-[10px] uppercase font-bold text-amber-400 block">Recommended Retail (4x MRP)</span>
+                  <span id="card_targetMrp" class="text-2xl font-black text-amber-400 font-mono">₹713.16</span>
+                  <span class="text-[10px] text-slate-400 block">4x production cost per FPCC guidelines</span>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-300 pt-2 border-t border-slate-850">
+                  <span>Applicable Indian GST:</span>
+                  <strong id="card_gstRate" class="font-mono text-cyan-400 text-sm">5% (₹19.75)</strong>
+                </div>
+
+                <div class="flex justify-between items-center text-slate-300">
+                  <span>Total Invoice / pc:</span>
+                  <strong id="card_finalInvoicePrice" class="font-mono text-white text-sm">₹414.75</strong>
+                </div>
+
+                <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+                  <div class="flex justify-between items-center">
+                    <span class="text-[10px] uppercase font-bold text-emerald-400">Net Profit / Margin</span>
+                    <span id="card_profitPct" class="text-xs font-bold text-emerald-300">54.86%</span>
+                  </div>
+                  <span id="card_profitInr" class="text-2xl font-black text-emerald-400 font-mono">₹216.71 / pc</span>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" onclick="saveQuotationFromSimulator()" class="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/25 flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="bookmark" class="w-4 h-4"></i>
+              SAVE APPROVED QUOTATION
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sub-Tab 2: Tax Invoices & Payments -->
+      <div id="fin-sub-invoices" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs font-bold">ACCOUNTS</span>
+              Tax Invoices & Payment Receipts
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Generate tax invoices against completed production orders and record bank receipts</p>
+          </div>
+          <button onclick="loadFinanceData()" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Invoices
+          </button>
+        </div>
+
+        <!-- Quick Invoice Generator & Payment Modals / Panels -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- Generate Invoice Form -->
+          <form id="generateInvoiceForm" onsubmit="handleInvoiceGenerate(event)" class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-violet-400 flex items-center gap-1.5">
+              <i data-lucide="file-text" class="w-4 h-4"></i>
+              Generate New Tax Invoice
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Production Order *</label>
+                <select id="invOrderSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white">
+                  <!-- Orders -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Unit Price (₹) *</label>
+                <input type="number" step="0.5" id="invUnitPrice" required value="395" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Freight (₹)</label>
+                <input type="number" step="10" id="invFreight" value="1500" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Payment Due Date</label>
+                <input type="date" id="invDueDate" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button type="submit" class="px-4 py-2 bg-violet-600 hover:bg-violet-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition">
+                <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                Create Tax Invoice
+              </button>
+            </div>
+          </form>
+
+          <!-- Record Payment Form -->
+          <form id="recordPaymentForm" onsubmit="handlePaymentRecord(event)" class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+              <i data-lucide="credit-card" class="w-4 h-4"></i>
+              Record Payment Receipt
+            </h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Invoice Number *</label>
+                <select id="payInvoiceSelect" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-cyan-400">
+                  <!-- Invoices -->
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Amount Received (₹) *</label>
+                <input type="number" step="0.5" id="payAmount" required placeholder="e.g. 50000" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-400">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Payment Mode</label>
+                <select id="payMode" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200">
+                  <option value="NEFT_RTGS">NEFT / RTGS</option>
+                  <option value="UPI">UPI</option>
+                  <option value="Cheque">Cheque</option>
+                  <option value="Cash">Cash</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Bank Reference / UTR</label>
+                <input type="text" id="payRef" placeholder="e.g. HDFC-N19283719" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-slate-200">
+              </div>
+            </div>
+            <div class="flex justify-end pt-1">
+              <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition">
+                <i data-lucide="check-check" class="w-3.5 h-3.5"></i>
+                Record Payment
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Invoices List Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="text-slate-400 uppercase bg-slate-950 rounded-xl">
+              <tr>
+                <th class="py-2.5 px-3">Invoice No</th>
+                <th class="py-2.5 px-3">Order Ref</th>
+                <th class="py-2.5 px-3">Client</th>
+                <th class="py-2.5 px-3">Total (₹)</th>
+                <th class="py-2.5 px-3">Paid (₹)</th>
+                <th class="py-2.5 px-3">Balance (₹)</th>
+                <th class="py-2.5 px-3">Status</th>
+              </tr>
+            </thead>
+            <tbody id="invoicesTableBody" class="divide-y divide-slate-850">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 12: WHATSAPP INTEGRATION & TWO-WAY CHATOPS ENGINE -->
+    <!-- ======================================================== -->
+    <section id="view-whatsapp" class="hidden space-y-6">
+      
+      <!-- Sub-Navigation for WhatsApp -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button onclick="switchWaSubTab('chat')" id="btn-sub-wa-chat" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-green-600 text-white transition flex items-center gap-1.5">
+          <i data-lucide="message-square" class="w-4 h-4"></i>
+          <span>1. Interactive WhatsApp ChatOps Simulator</span>
+        </button>
+        <button onclick="switchWaSubTab('logs')" id="btn-sub-wa-logs" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition flex items-center gap-1.5">
+          <i data-lucide="list" class="w-4 h-4"></i>
+          <span>2. Audit Logs & Outbound Alerts (<span id="waLogCountBadge">0</span>)</span>
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Interactive ChatOps Live Simulator -->
+      <div id="wa-sub-chat" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left 2 Cols: WhatsApp Device Mockup -->
+        <div class="lg:col-span-2 bg-slate-900/90 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col h-[650px]">
+          
+          <!-- WhatsApp Chat Header -->
+          <div class="bg-slate-950 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="relative">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center font-black text-white shadow-md">
+                  <i data-lucide="bot" class="w-5 h-5"></i>
+                </div>
+                <span class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-400 border-2 border-slate-950"></span>
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <h3 class="text-sm font-bold text-white">FPCC Cortex ChatOps Bot</h3>
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+                </div>
+                <p class="text-[11px] text-slate-400">Two-way Factory Telemetry & Automation Webhook</p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                LIVE WEBHOOK
+              </span>
+            </div>
+          </div>
+
+          <!-- Chat Quick Chips (Click to Send) -->
+          <div class="bg-slate-950/60 border-b border-slate-800/80 px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+            <span class="text-[10px] font-bold uppercase text-slate-500 tracking-wider shrink-0 mr-1">Quick Commands:</span>
+            <button onclick="sendQuickChatCommand('STATUS FPCC-PO-261014-01')" class="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-cyan-300 whitespace-nowrap transition">
+              STATUS FPCC-PO-261014-01
+            </button>
+            <button onclick="sendQuickChatCommand('STATUS FPCC-PO-26001')" class="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-cyan-300 whitespace-nowrap transition">
+              STATUS FPCC-PO-26001
+            </button>
+            <button onclick="sendQuickChatCommand('STOCK Polar Fleece')" class="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-amber-300 whitespace-nowrap transition">
+              STOCK Polar Fleece
+            </button>
+            <button onclick="sendQuickChatCommand('RUNNER TRN-261014-03 PICKUP')" class="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-emerald-300 whitespace-nowrap transition">
+              RUNNER PICKUP
+            </button>
+            <button onclick="sendQuickChatCommand('HELP')" class="px-2.5 py-1 rounded-lg bg-slate-850 hover:bg-slate-800 border border-slate-700 text-xs font-mono text-slate-300 whitespace-nowrap transition">
+              HELP
+            </button>
+          </div>
+
+          <!-- Chat Message Feed -->
+          <div id="waChatMessages" class="flex-1 p-4 overflow-y-auto space-y-3 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] bg-slate-950/80">
+            <!-- Initial Bot Greeting -->
+            <div class="flex items-start gap-2 max-w-[85%]">
+              <div class="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-sm p-3.5 shadow text-xs text-slate-200 space-y-1">
+                <div class="font-bold text-emerald-400 flex items-center justify-between gap-4">
+                  <span>FPCC Cortex Assistant</span>
+                  <span class="text-[10px] text-slate-500 font-normal">Just now</span>
+                </div>
+                <p class="whitespace-pre-line leading-relaxed">👋 <strong>Welcome to FPCC Cortex ChatOps!</strong>
+
+You can interact directly with the factory floor via WhatsApp. Try sending:
+• <code>STATUS FPCC-PO-261014-01</code>
+• <code>STOCK Polar Fleece</code>
+• <code>RUNNER TRN-261014-03 PICKUP</code>
+• <code>HELP</code></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Bar -->
+          <form id="waChatInputForm" onsubmit="handleChatSubmit(event)" class="bg-slate-950 p-3 border-t border-slate-800 flex items-center gap-2">
+            <input type="text" id="waChatMessageInput" required placeholder="Type command (e.g. STATUS FPCC-PO-261014-01)..."
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <button type="submit" class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white flex items-center justify-center shadow-lg shadow-emerald-600/30 transition transform active:scale-95">
+              <i data-lucide="send" class="w-4 h-4"></i>
+            </button>
+          </form>
+
+        </div>
+
+        <!-- Right Col: Command Reference & Trigger Architecture -->
+        <div class="space-y-4">
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-green-400 flex items-center gap-2">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+              Available WhatsApp ChatOps Syntax
+            </h3>
+            <p class="text-xs text-slate-400">Workers, runners, managers, and clients can trigger business logic via WhatsApp webhook:</p>
+            
+            <div class="space-y-2.5 text-xs">
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <strong class="font-mono text-cyan-400 block">STATUS &lt;OrderNo&gt;</strong>
+                <span class="text-[11px] text-slate-400">Fetches live production funnel (Cut &rarr; Branded &rarr; Stitched &rarr; QC &rarr; Packed) and target dispatch date.</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <strong class="font-mono text-amber-400 block">STOCK &lt;FabricName&gt;</strong>
+                <span class="text-[11px] text-slate-400">Checks warehouse stock, roll numbers, available kg, and bin locations.</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <strong class="font-mono text-emerald-400 block">RUNNER &lt;TransitPass&gt; PICKUP</strong>
+                <span class="text-[11px] text-slate-400">Runner acknowledges material pickup and starts transit tracking.</span>
+              </div>
+
+              <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
+                <strong class="font-mono text-rose-400 block">RUNNER &lt;Pass&gt; ARRIVED &lt;Qty&gt;</strong>
+                <span class="text-[11px] text-slate-400">Destination handover verification. Automatically flags discrepancies if count mismatches!</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Outbound Dispatch Card -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-indigo-400 flex items-center gap-2">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              Broadcast Outbound Alert
+            </h3>
+            <form id="waOutboundForm" onsubmit="handleOutboundAlertSubmit(event)" class="space-y-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Target Phone</label>
+                <input type="text" id="waOutPhone" required value="+91 98765 43210" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-emerald-400">
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-400 mb-1">Alert Message</label>
+                <textarea id="waOutMessage" rows="2" required placeholder="e.g. Production cutting completed for your order!"
+                  class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200"></textarea>
+              </div>
+              <button type="submit" class="w-full py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-bold text-white transition flex items-center justify-center gap-1">
+                <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                Dispatch Outbound Alert
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Sub-Tab 2: Audit Logs -->
+      <div id="wa-sub-logs" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-green-500/20 text-green-400 border border-green-500/30 text-xs font-bold">AUDIT TRAIL</span>
+              Complete WhatsApp Message Logs
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Two-way logs of inbound commands and automated outbound notifications</p>
+          </div>
+          <button onclick="loadWhatsAppLogs()" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-semibold">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Logs
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="text-slate-400 uppercase bg-slate-950 rounded-xl">
+              <tr>
+                <th class="py-2.5 px-3">Direction</th>
+                <th class="py-2.5 px-3">Phone</th>
+                <th class="py-2.5 px-3">Recipient/Sender</th>
+                <th class="py-2.5 px-3">Type</th>
+                <th class="py-2.5 px-3">Message Body</th>
+                <th class="py-2.5 px-3">Status</th>
+                <th class="py-2.5 px-3">Time</th>
+              </tr>
+            </thead>
+            <tbody id="waLogsTableBody" class="divide-y divide-slate-850">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
   <!-- ======================================================== -->
@@ -1202,6 +1992,9 @@
       if (tabId === 'runner') loadTransitsList();
       if (tabId === 'cutting') { updateCuttingTotals(); calculatePallaAvg(); }
       if (tabId === 'challan') loadChallansList();
+      if (tabId === 'crm') loadCrmData();
+      if (tabId === 'finance') { loadFinanceData(); runCostingCalculation(); }
+      if (tabId === 'whatsapp') loadWhatsAppLogs();
       if (tabId === 'inward') fetchNextParentCode();
       if (tabId === 'issue') refreshIssueDropdowns();
       if (tabId === 'ledger') loadStockLedger();
@@ -1248,7 +2041,7 @@
 
       // Populate order dropdowns
       const orderOptions = orders.map(o => `<option value="${o.production_order_no}">${o.production_order_no} | ${o.client_name} - ${o.product_name} (${o.color_name}) [${o.total_qty} pcs]</option>`).join('');
-      ['transitOrderSelect', 'cuttingOrderSelect', 'challanOrderSelect', 'procOrderSelect', 'packOrderSelect', 'issueOrderSelect'].forEach(id => {
+      ['transitOrderSelect', 'cuttingOrderSelect', 'challanOrderSelect', 'procOrderSelect', 'packOrderSelect', 'issueOrderSelect', 'invOrderSelect'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = orderOptions;
       });
@@ -2112,6 +2905,501 @@
           }).join('');
         }
       } catch (e) { console.error(e); }
+    }
+
+    // ========================================================
+    // 8. LEAN CRM & NATIVE ORDER TAKING (ZOHO REPLACEMENT)
+    // ========================================================
+    function switchCrmSubTab(subId) {
+      document.getElementById('crm-sub-order').classList.toggle('hidden', subId !== 'order');
+      document.getElementById('crm-sub-inquiry').classList.toggle('hidden', subId !== 'inquiry');
+
+      document.getElementById('btn-sub-crm-order').className = subId === 'order' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btn-sub-crm-inquiry').className = subId === 'inquiry' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+
+      if (subId === 'inquiry') loadCrmInquiries();
+    }
+
+    function updateOrderMatrixTotal() {
+      let sum = 0;
+      ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'].forEach(sz => {
+        sum += (parseInt(document.getElementById(`matrix_${sz}`).value, 10) || 0);
+      });
+      document.getElementById('orderMatrixTotalDisplay').textContent = `${sum} pcs`;
+    }
+
+    async function handleNativeOrderSubmit(e) {
+      e.preventDefault();
+      const clientName = document.getElementById('orderClientName').value.trim();
+      const contactPerson = document.getElementById('orderContactPerson').value.trim();
+      const phone = document.getElementById('orderPhone').value.trim();
+      const email = document.getElementById('orderEmail').value.trim();
+      const gstin = document.getElementById('orderGstin').value.trim();
+      const billingAddress = document.getElementById('orderAddress').value.trim();
+      const category = document.getElementById('orderCategory').value;
+      const subCategory = document.getElementById('orderSubCategory').value;
+      const productName = document.getElementById('orderProductName').value.trim();
+      const colorName = document.getElementById('orderColorName').value.trim();
+      const unitPrice = parseFloat(document.getElementById('orderUnitPrice').value);
+      const targetEtd = document.getElementById('orderTargetEtd').value;
+      const freightCostTerms = document.getElementById('orderFreightTerms').value;
+      const clientComments = document.getElementById('orderComments').value.trim();
+
+      const sizeMatrix = {};
+      ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'].forEach(sz => {
+        const val = parseInt(document.getElementById(`matrix_${sz}`).value, 10) || 0;
+        if (val > 0) sizeMatrix[sz] = val;
+      });
+
+      if (Object.keys(sizeMatrix).length === 0) {
+        playAudio('error');
+        alert('Please specify at least 1 piece in the size breakdown matrix.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/crm/orders/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName, contactPerson, phone, email, gstin, billingAddress,
+            category, subCategory, productName, colorName, unitPrice,
+            targetEtd, freightCostTerms, clientComments, sizeMatrix
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`🎉 Order Booked Successfully!\n• PO Number: ${json.data.productionOrderNo}\n• Total Quantity: ${json.data.totalQty} pcs\n• WhatsApp Ack Dispatched: Delivered ✓✓`);
+          await loadMasters();
+          loadOperationsRadar();
+          switchTab('radar');
+        } else {
+          playAudio('error');
+          alert(`Order Creation Failed: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(err.message);
+      }
+    }
+
+    async function loadCrmInquiries() {
+      try {
+        const res = await fetch('/api/crm/inquiries');
+        const json = await res.json();
+        if (json.success) {
+          document.getElementById('crmInquiryCountBadge').textContent = json.count;
+          const tbody = document.getElementById('inquiriesTableBody');
+          if (json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-slate-500">No inquiries recorded yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = json.data.map(i => `
+            <tr class="hover:bg-slate-900">
+              <td class="py-2.5 px-3 font-mono font-bold text-blue-400">${i.inquiry_no}</td>
+              <td class="py-2.5 px-3 font-semibold text-white">${i.client_name}</td>
+              <td class="py-2.5 px-3 text-emerald-400 font-mono">${i.phone}</td>
+              <td class="py-2.5 px-3 text-slate-200">${i.product_name}</td>
+              <td class="py-2.5 px-3 font-bold text-amber-400">${i.target_qty} pcs</td>
+              <td class="py-2.5 px-3 font-mono text-slate-300">₹${i.target_budget_per_pc || '-'}</td>
+              <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">${i.status}</span></td>
+              <td class="py-2.5 px-3 text-right">
+                <button onclick="prefillOrderFromInquiry('${escape(i.client_name)}', '${i.phone}', '${escape(i.product_name)}', ${i.target_qty})" class="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition">
+                  Convert to PO
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) { console.error('Inquiries load failed', e); }
+    }
+
+    function prefillOrderFromInquiry(client, phone, product, qty) {
+      switchCrmSubTab('order');
+      document.getElementById('orderClientName').value = unescape(client);
+      document.getElementById('orderPhone').value = phone;
+      document.getElementById('orderProductName').value = unescape(product);
+      document.getElementById('matrix_M').value = Math.round(qty * 0.4);
+      document.getElementById('matrix_L').value = Math.round(qty * 0.4);
+      document.getElementById('matrix_XL').value = Math.round(qty * 0.2);
+      updateOrderMatrixTotal();
+    }
+
+    async function handleInquirySubmit(e) {
+      e.preventDefault();
+      const clientName = document.getElementById('inqClient').value.trim();
+      const phone = document.getElementById('inqPhone').value.trim();
+      const productName = document.getElementById('inqProduct').value.trim();
+      const targetQty = document.getElementById('inqQty').value;
+
+      try {
+        const res = await fetch('/api/crm/inquiries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientName, phone, productName, targetQty })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Inquiry ${json.data.inquiryNo} Logged!`);
+          document.getElementById('newInquiryForm').reset();
+          loadCrmInquiries();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function loadCrmData() {
+      updateOrderMatrixTotal();
+      loadCrmInquiries();
+    }
+
+    // ========================================================
+    // 9. FINANCE & COSTING (4x MRP SIMULATOR)
+    // ========================================================
+    function switchFinanceSubTab(subId) {
+      document.getElementById('fin-sub-costing').classList.toggle('hidden', subId !== 'costing');
+      document.getElementById('fin-sub-invoices').classList.toggle('hidden', subId !== 'invoices');
+
+      document.getElementById('btn-sub-fin-costing').className = subId === 'costing' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btn-sub-fin-invoices').className = subId === 'invoices' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+
+      if (subId === 'invoices') loadFinanceInvoices();
+    }
+
+    let currentCostingState = null;
+
+    async function runCostingCalculation() {
+      const fabricRatePerKg = parseFloat(document.getElementById('cost_fabRate').value) || 0;
+      const fabricAvgKgPerPc = parseFloat(document.getElementById('cost_fabAvg').value) || 0;
+      const cuttingCost = parseFloat(document.getElementById('cost_cutting').value) || 0;
+      const stitchingCost = parseFloat(document.getElementById('cost_stitching').value) || 0;
+      const brandingCost = parseFloat(document.getElementById('cost_branding').value) || 0;
+      const finishingCost = parseFloat(document.getElementById('cost_finishing').value) || 0;
+      const accessoriesCost = parseFloat(document.getElementById('cost_accessories').value) || 0;
+      const rejectionBufferPct = parseFloat(document.getElementById('cost_buffer').value) || 0;
+      const sellingPrice = parseFloat(document.getElementById('cost_sellingPrice').value) || 0;
+      const taxBilling = document.getElementById('cost_taxBilling').value;
+
+      try {
+        const res = await fetch('/api/finance/costing/calculate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fabricRatePerKg, fabricAvgKgPerPc, cuttingCost, stitchingCost,
+            brandingCost, finishingCost, accessoriesCost, rejectionBufferPct,
+            sellingPrice, taxBilling, isApparel: true
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          const d = json.data;
+          currentCostingState = d;
+          document.getElementById('cost_fabCostDisplay').textContent = `₹${d.fabricCostPerPc.toFixed(2)} / pc`;
+          document.getElementById('card_directCost').textContent = `₹${d.directCost.toFixed(2)}`;
+          document.getElementById('card_totalProdCost').textContent = `₹${d.totalProductionCost.toFixed(2)}`;
+          document.getElementById('card_targetMrp').textContent = `₹${d.targetMrp.toFixed(2)}`;
+          document.getElementById('card_gstRate').textContent = `${d.taxRatePct}% (₹${d.taxAmount.toFixed(2)})`;
+          document.getElementById('card_finalInvoicePrice').textContent = `₹${d.finalInvoicePricePerPc.toFixed(2)}`;
+          document.getElementById('card_profitInr').textContent = `₹${d.profitInr.toFixed(2)} / pc`;
+          document.getElementById('card_profitPct').textContent = `${d.profitPct.toFixed(2)}%`;
+        }
+      } catch (e) { console.error('Costing calc failed', e); }
+    }
+
+    async function saveQuotationFromSimulator() {
+      if (!currentCostingState) await runCostingCalculation();
+      try {
+        const res = await fetch('/api/finance/costing/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientName: 'Standard Client Quote',
+            productName: 'Custom Apparel Specification',
+            qty: 100,
+            fabricRatePerKg: document.getElementById('cost_fabRate').value,
+            fabricAvgKgPerPc: document.getElementById('cost_fabAvg').value,
+            fabricCostPerPc: currentCostingState.fabricCostPerPc,
+            accessoriesCostPerPc: document.getElementById('cost_accessories').value,
+            cuttingCostPerPc: document.getElementById('cost_cutting').value,
+            stitchingCostPerPc: document.getElementById('cost_stitching').value,
+            finishingCostPerPc: document.getElementById('cost_finishing').value,
+            brandingCostPerPc: document.getElementById('cost_branding').value,
+            rejectionBufferPct: document.getElementById('cost_buffer').value,
+            totalProductionCost: currentCostingState.totalProductionCost,
+            targetMrp: currentCostingState.targetMrp,
+            sellingPricePerPc: currentCostingState.sellingPrice,
+            taxRatePct: currentCostingState.taxRatePct,
+            taxBilling: currentCostingState.taxBilling,
+            taxAmountPerPc: currentCostingState.taxAmount,
+            profitInrPerPc: currentCostingState.profitInr,
+            profitPct: currentCostingState.profitPct
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Quotation ${json.data.quotationNo} Approved & Saved! Value: ₹${json.data.totalOrderValue}`);
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function loadFinanceData() {
+      try {
+        const res = await fetch('/api/finance/summary');
+        const json = await res.json();
+        if (json.success) {
+          const d = json.data;
+          document.getElementById('finTotalInvoiced').textContent = `₹${d.totalInvoiced.toLocaleString('en-IN')}`;
+          document.getElementById('finTotalCollected').textContent = `₹${d.totalCollected.toLocaleString('en-IN')}`;
+          document.getElementById('finTotalAr').textContent = `₹${d.accountsReceivable.toLocaleString('en-IN')}`;
+          document.getElementById('finUnpaidInvoicesCount').textContent = `${d.unpaidCount} Pending Invoices`;
+        }
+        await loadFinanceInvoices();
+      } catch (e) { console.error('Finance summary error', e); }
+    }
+
+    async function loadFinanceInvoices() {
+      try {
+        const res = await fetch('/api/finance/invoices');
+        const json = await res.json();
+        if (json.success) {
+          const select = document.getElementById('payInvoiceSelect');
+          select.innerHTML = json.data.map(i => `<option value="${i.id}">${i.invoice_no} | ${i.client_name} (Bal: ₹${i.balance_due})</option>`).join('');
+
+          const tbody = document.getElementById('invoicesTableBody');
+          if (json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-500">No invoices generated yet.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = json.data.map(i => {
+            let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">Unpaid</span>';
+            if (i.payment_status === 'Paid') {
+              statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Paid ✓</span>';
+            } else if (i.payment_status === 'Partially_Paid') {
+              statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30">Partial</span>';
+            }
+            return `
+              <tr class="hover:bg-slate-900">
+                <td class="py-2.5 px-3 font-mono font-bold text-violet-400">${i.invoice_no}</td>
+                <td class="py-2.5 px-3 font-mono text-cyan-400">${i.production_order_no}</td>
+                <td class="py-2.5 px-3 font-semibold text-white">${i.client_name}</td>
+                <td class="py-2.5 px-3 font-mono font-bold text-white">₹${i.total_amount.toLocaleString('en-IN')}</td>
+                <td class="py-2.5 px-3 font-mono text-emerald-400">₹${i.amount_paid.toLocaleString('en-IN')}</td>
+                <td class="py-2.5 px-3 font-mono font-bold text-rose-400">₹${i.balance_due.toLocaleString('en-IN')}</td>
+                <td class="py-2.5 px-3">${statusBadge}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) { console.error('Invoices list failed', e); }
+    }
+
+    async function handleInvoiceGenerate(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('invOrderSelect').value;
+      const unitPrice = document.getElementById('invUnitPrice').value;
+      const freightAmount = document.getElementById('invFreight').value;
+      const dueDate = document.getElementById('invDueDate').value;
+
+      try {
+        const res = await fetch('/api/finance/invoices/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productionOrderNo, unitPrice, freightAmount, dueDate })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Tax Invoice ${json.data.invoiceNo} Generated! Total: ₹${json.data.totalAmount}`);
+          loadFinanceData();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function handlePaymentRecord(e) {
+      e.preventDefault();
+      const invoiceId = document.getElementById('payInvoiceSelect').value;
+      const amount = document.getElementById('payAmount').value;
+      const paymentMode = document.getElementById('payMode').value;
+      const referenceNo = document.getElementById('payRef').value.trim();
+
+      try {
+        const res = await fetch('/api/finance/payments/record', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoiceId, amount, paymentMode, referenceNo })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Payment ${json.data.paymentNo} Recorded! Received: ₹${json.data.amountReceived}, Balance Due: ₹${json.data.newBalanceDue}`);
+          document.getElementById('recordPaymentForm').reset();
+          loadFinanceData();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    // ========================================================
+    // 10. WHATSAPP CHATOPS & TWO-WAY AUTOMATION ENGINE
+    // ========================================================
+    function switchWaSubTab(subId) {
+      document.getElementById('wa-sub-chat').classList.toggle('hidden', subId !== 'chat');
+      document.getElementById('wa-sub-logs').classList.toggle('hidden', subId !== 'logs');
+
+      document.getElementById('btn-sub-wa-chat').className = subId === 'chat' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-green-600 text-white transition flex items-center gap-1.5' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition flex items-center gap-1.5';
+      document.getElementById('btn-sub-wa-logs').className = subId === 'logs' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-green-600 text-white transition flex items-center gap-1.5' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition flex items-center gap-1.5';
+
+      if (subId === 'logs') loadWhatsAppLogs();
+    }
+
+    function addChatMessage(sender, text, isUser) {
+      const container = document.getElementById('waChatMessages');
+      const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      const msgDiv = document.createElement('div');
+      msgDiv.className = isUser 
+        ? 'flex items-start justify-end gap-2 ml-auto max-w-[85%]'
+        : 'flex items-start gap-2 max-w-[85%]';
+
+      const bubbleColor = isUser 
+        ? 'bg-emerald-700/80 border border-emerald-600/60 text-white' 
+        : 'bg-slate-900 border border-slate-800 text-slate-200';
+      const senderColor = isUser ? 'text-emerald-200' : 'text-emerald-400';
+
+      msgDiv.innerHTML = `
+        <div class="${bubbleColor} rounded-2xl ${isUser ? 'rounded-tr-sm' : 'rounded-tl-sm'} p-3.5 shadow text-xs space-y-1">
+          <div class="font-bold ${senderColor} flex items-center justify-between gap-4">
+            <span>${sender}</span>
+            <span class="text-[10px] text-slate-400 font-normal flex items-center gap-1">
+              ${timeStr}
+              ${isUser ? '<span class="text-cyan-300">✓✓</span>' : ''}
+            </span>
+          </div>
+          <p class="whitespace-pre-line leading-relaxed font-sans">${escapeHtml(text)}</p>
+        </div>
+      `;
+      container.appendChild(msgDiv);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function escapeHtml(string) {
+      return String(string)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function sendQuickChatCommand(cmd) {
+      document.getElementById('waChatMessageInput').value = cmd;
+      handleChatSubmit(new Event('submit'));
+    }
+
+    async function handleChatSubmit(e) {
+      if (e) e.preventDefault();
+      const input = document.getElementById('waChatMessageInput');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const userName = document.getElementById('activeUserSelect').selectedOptions[0].text;
+
+      addChatMessage(userName, text, true);
+      playAudio('success');
+      input.value = '';
+
+      try {
+        const res = await fetch('/api/whatsapp/webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: '919822233445',
+            senderName: userName,
+            message: text
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          addChatMessage('FPCC Cortex Bot', json.data.replyText, false);
+          if (json.data.triggerAction) {
+            loadOperationsRadar();
+          }
+        } else {
+          addChatMessage('FPCC Cortex Bot', `Error: ${json.error}`, false);
+        }
+      } catch (err) {
+        addChatMessage('FPCC Cortex Bot', `Network Error: ${err.message}`, false);
+      }
+    }
+
+    async function handleOutboundAlertSubmit(e) {
+      e.preventDefault();
+      const phoneNumber = document.getElementById('waOutPhone').value.trim();
+      const messageBody = document.getElementById('waOutMessage').value.trim();
+
+      try {
+        const res = await fetch('/api/whatsapp/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phoneNumber,
+            recipientName: 'Client Alert',
+            messageType: 'GENERAL',
+            messageBody
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert('✓ WhatsApp Notification Dispatched & Logged!');
+          document.getElementById('waOutMessage').value = '';
+          loadWhatsAppLogs();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function loadWhatsAppLogs() {
+      try {
+        const res = await fetch('/api/whatsapp/logs');
+        const json = await res.json();
+        if (json.success) {
+          document.getElementById('waLogCountBadge').textContent = json.count;
+          const tbody = document.getElementById('waLogsTableBody');
+          tbody.innerHTML = json.data.map(l => {
+            const isOut = l.direction === 'OUTBOUND';
+            const badge = isOut 
+              ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">OUTBOUND</span>'
+              : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-500/20 text-green-400 border border-green-500/30">INBOUND</span>';
+            return `
+              <tr class="hover:bg-slate-900">
+                <td class="py-2.5 px-3">${badge}</td>
+                <td class="py-2.5 px-3 font-mono text-emerald-400">${l.phone_number}</td>
+                <td class="py-2.5 px-3 font-semibold text-white">${l.recipient_name || '-'}</td>
+                <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">${l.message_type}</td>
+                <td class="py-2.5 px-3 text-slate-200 max-w-xs truncate" title="${escapeHtml(l.message_body)}">${escapeHtml(l.message_body)}</td>
+                <td class="py-2.5 px-3"><span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">${l.status}</span></td>
+                <td class="py-2.5 px-3 font-mono text-slate-400 text-[11px]">${new Date(l.created_at).toLocaleTimeString()}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) { console.error('WhatsApp logs load failed', e); }
     }
 
     // Initialize on page load

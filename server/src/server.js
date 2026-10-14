@@ -5,6 +5,9 @@ const path = require('node:path');
 const inventoryRoutes = require('./routes/inventory');
 const mastersRoutes = require('./routes/masters');
 const operationsRoutes = require('./routes/operations');
+const crmRoutes = require('./routes/crm');
+const financeRoutes = require('./routes/finance');
+const whatsappRoutes = require('./routes/whatsapp');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +19,9 @@ app.use(express.json());
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/masters', mastersRoutes);
 app.use('/api/operations', operationsRoutes);
+app.use('/api/crm', crmRoutes);
+app.use('/api/finance', financeRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

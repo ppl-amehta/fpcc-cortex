@@ -24,3 +24,7 @@ build/
 
 # Tunnel logs
 *.log
+
+# SQLite WAL & SHM
+data/*.db-wal
+data/*.db-shm
