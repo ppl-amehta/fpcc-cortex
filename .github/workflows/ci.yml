@@ -1,0 +1,47 @@
+name: FPCC Cortex CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'server/package-lock.json'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Server Dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Ingest Excel Masters & Seed DB
+        run: |
+          python3 scripts/ingest_excel.py
+          python3 scripts/seed_operations.py
+
+      - name: Start Server in Background
+        run: |
+          cd server
+          node src/server.js &
+          sleep 3
+
+      - name: Run Operational Flow Verification
+        run: |
+          python3 scripts/test_operations_flow.py

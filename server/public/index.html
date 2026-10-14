@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FPCC Cortex | Frontier Apparel Operations & Runner Logistics</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    button, input, select { touch-action: manipulation; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- TOP APP BAR -->
+  <header class="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-3 sm:px-5 py-2.5 flex items-center justify-between shadow-lg">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+        <i data-lucide="layers" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base sm:text-lg font-black tracking-tight text-white">FPCC CORTEX</h1>
+          <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            FLOOR LIVE
+          </span>
+        </div>
+        <p class="text-[11px] text-slate-400">Validated Worker Telemetry & Runner Logistics Engine</p>
+      </div>
+    </div>
+
+    <!-- Active User & Sound Controls -->
+    <div class="flex items-center space-x-2 sm:space-x-3">
+      <button id="soundToggleBtn" onclick="toggleAudio()" class="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+        <span class="hidden sm:inline font-medium">Audio Cues</span>
+      </button>
+
+      <div class="flex items-center bg-slate-800/90 rounded-xl p-1 border border-slate-700 shadow-inner">
+        <i data-lucide="user-check" class="w-4 h-4 text-indigo-400 ml-2"></i>
+        <select id="activeUserSelect" class="bg-transparent text-xs font-semibold text-slate-200 py-1 px-2 focus:outline-none cursor-pointer">
+          <!-- Populated from users API -->
+          <option value="usr-santosh">Santosh (Cutting Master)</option>
+          <option value="usr-ramesh">Ramesh (Runner)</option>
+          <option value="usr-mukesh">Mukesh (Runner)</option>
+          <option value="usr-suresh">Suresh (Stitching Supervisor)</option>
+          <option value="usr-dilip">Dilip (Finishing & QC)</option>
+          <option value="usr-rohit">Rohit (Packing Store)</option>
+          <option value="usr-aniket">Aniket (Stores)</option>
+          <option value="usr-meenakshi">Meenakshi (Merchandiser)</option>
+          <option value="usr-prashant">Prashant (Admin)</option>
+          <option value="usr-rimpy">Rimpy (SuperAdmin)</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- WORKSTATION NAVIGATION TABS -->
+  <nav class="bg-slate-900 border-b border-slate-800 px-2 py-2 overflow-x-auto no-scrollbar flex items-center gap-1.5 shadow-md">
+    <button onclick="switchTab('radar')" id="tab-radar" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap bg-indigo-600 text-white shadow-md">
+      <i data-lucide="gauge" class="w-4 h-4"></i>
+      <span>Operations Radar</span>
+    </button>
+    <button onclick="switchTab('runner')" id="tab-runner" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="truck" class="w-4 h-4 text-cyan-400"></i>
+      <span>Runner Logistics</span>
+      <span id="activeTransitBadge" class="hidden ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">0</span>
+    </button>
+    <button onclick="switchTab('cutting')" id="tab-cutting" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="scissors" class="w-4 h-4 text-amber-400"></i>
+      <span>Cutting & Palla</span>
+    </button>
+    <button onclick="switchTab('challan')" id="tab-challan" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="stamp" class="w-4 h-4 text-pink-400"></i>
+      <span>Branding Challans</span>
+    </button>
+    <button onclick="switchTab('floor')" id="tab-floor" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="cpu" class="w-4 h-4 text-emerald-400"></i>
+      <span>Stitching & Finishing</span>
+    </button>
+    <button onclick="switchTab('packing')" id="tab-packing" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="package" class="w-4 h-4 text-violet-400"></i>
+      <span>Carton Packing</span>
+    </button>
+    <button onclick="switchTab('inward')" id="tab-inward" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="arrow-down-left" class="w-4 h-4 text-teal-400"></i>
+      <span>Inward & Rolls</span>
+    </button>
+    <button onclick="switchTab('issue')" id="tab-issue" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="arrow-up-right" class="w-4 h-4 text-rose-400"></i>
+      <span>Issue & Return</span>
+    </button>
+    <button onclick="switchTab('ledger')" id="tab-ledger" class="tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-2 transition whitespace-nowrap text-slate-300 hover:bg-slate-800">
+      <i data-lucide="book-open" class="w-4 h-4 text-purple-400"></i>
+      <span>Stock Ledger</span>
+    </button>
+  </nav>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 p-3 sm:p-5 max-w-7xl mx-auto w-full space-y-6">
+
+    <!-- ======================================================== -->
+    <!-- VIEW 1: OPERATIONS RADAR (MANAGER & SUPERVISOR VIEW) -->
+    <!-- ======================================================== -->
+    <section id="view-radar" class="space-y-6">
+      
+      <!-- Top Alert: Flagged Transit Discrepancies (if any) -->
+      <div id="radarDiscrepancyBanner" class="hidden bg-rose-500/10 border border-rose-500/30 rounded-2xl p-4 shadow-sm flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div class="p-2 rounded-xl bg-rose-500/20 text-rose-400 shrink-0 mt-0.5">
+            <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-black text-rose-400 uppercase tracking-wider">Transit Handover Discrepancies Flagged</h3>
+            <p id="radarDiscrepancyText" class="text-xs text-slate-300 mt-0.5">Physical count did not match dispatched count during material transport.</p>
+          </div>
+        </div>
+        <button onclick="switchTab('runner')" class="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shrink-0 transition">
+          Inspect Transit
+        </button>
+      </div>
+
+      <!-- Live Order Stage Pipeline Funnels -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+              <i data-lucide="git-merge" class="w-4 h-4 text-indigo-400"></i>
+              Live Order Stage Progression Funnel
+            </h2>
+            <p class="text-xs text-slate-400">End-to-end work verification across Planned &rarr; Cut &rarr; Branded &rarr; Stitched &rarr; QC &rarr; Packed</p>
+          </div>
+          <button onclick="loadOperationsRadar()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-indigo-300 border border-slate-700 flex items-center gap-1.5 transition">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Radar
+          </button>
+        </div>
+
+        <div id="radarOrdersContainer" class="space-y-4">
+          <!-- Populated dynamically with visual pipeline bars -->
+          <p class="text-xs text-slate-500 py-4 text-center">Loading live order progression...</p>
+        </div>
+      </div>
+
+      <!-- Grid: Active Runner Transits & Rejection Pareto -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        
+        <!-- Live Runner Transit Radar -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-cyan-400 flex items-center gap-2">
+              <i data-lucide="truck" class="w-4 h-4"></i>
+              Active Runner Transits (In-Motion)
+            </h3>
+            <span id="radarActiveTransitsCount" class="text-xs font-mono text-slate-400 font-bold">0 Active</span>
+          </div>
+          <div id="radarActiveTransitsList" class="space-y-2.5">
+            <p class="text-xs text-slate-500 py-3 text-center">No materials currently in transit between workstations.</p>
+          </div>
+        </div>
+
+        <!-- Fabric Yield & Palla Variance Summary -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4"></i>
+              Fabric Yield & Palla Consumption Variance
+            </h3>
+            <span class="text-[11px] text-slate-400">Actual vs Planned BOM</span>
+          </div>
+          <div id="radarYieldVarianceList" class="space-y-2.5">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 2: RUNNER LOGISTICS & MATERIAL TRANSIT PASSES -->
+    <!-- ======================================================== -->
+    <section id="view-runner" class="hidden space-y-6">
+      
+      <!-- Sub-Navigation for Runner Station -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button onclick="switchRunnerSubTab('dispatch')" id="btn-sub-dispatch" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 text-white transition">
+          1. Dispatch New Transit
+        </button>
+        <button onclick="switchRunnerSubTab('queue')" id="btn-sub-queue" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          2. Runner Pickup Queue
+        </button>
+        <button onclick="switchRunnerSubTab('receive')" id="btn-sub-receive" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          3. Destination Handover & Count Verification
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Dispatch New Transit Pass -->
+      <div id="runner-sub-dispatch" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold">DISPATCH</span>
+            Create Material Movement Transit Pass
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Authorizes and logs material custody transfer between stations (Cutting, Branding, Stitching, Finishing, Packing)</p>
+        </div>
+
+        <form id="transitDispatchForm" onsubmit="handleTransitDispatch(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="transitOrderSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <!-- Orders -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Source Station (From) <span class="text-rose-400">*</span></label>
+              <select id="transitSourceStation" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <option value="Cutting Table 1">Cutting Table 1</option>
+                <option value="Warehouse Stores">Warehouse Stores</option>
+                <option value="Branding Gate">Branding / Embroidery Gate</option>
+                <option value="Stitching Line 1">Stitching Line 1</option>
+                <option value="Finishing Station">Finishing Station</option>
+                <option value="QC Table 1">QC Table 1</option>
+                <option value="Packing Table">Packing Table</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Destination Station (To) <span class="text-rose-400">*</span></label>
+              <select id="transitDestStation" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                <option value="Branding Gate">Branding / Embroidery Gate</option>
+                <option value="Stitching Line 1">Stitching Line 1</option>
+                <option value="Finishing Station">Finishing Station</option>
+                <option value="QC Table 1">QC Table 1</option>
+                <option value="Packing Table">Packing Table</option>
+                <option value="Dispatch Bay">Dispatch Bay</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Item Type <span class="text-rose-400">*</span></label>
+              <select id="transitItemType" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="Cut_Panels">Cut Panels (Bundles)</option>
+                <option value="Semi_Stitched">Semi-Stitched Garments</option>
+                <option value="Finished_Garments">Finished Garments</option>
+                <option value="Fabric_Rolls">Fabric Rolls</option>
+                <option value="Trims_Accessories">Trims / Labels / Zippers</option>
+                <option value="Sealed_Cartons">Sealed Cartons</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Assign Runner <span class="text-rose-400">*</span></label>
+              <select id="transitRunnerSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="usr-ramesh">Ramesh (Runner)</option>
+                <option value="usr-mukesh">Mukesh (Runner)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Quantity (Pieces / Units) <span class="text-rose-400">*</span></label>
+              <div class="flex items-center gap-2">
+                <input type="number" id="transitDispatchedQty" required min="1" placeholder="e.g. 150"
+                  class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-cyan-400 focus:outline-none">
+                <button type="button" onclick="setTransitQty(50)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-300">+50</button>
+                <button type="button" onclick="setTransitQty(100)" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold text-slate-300">+100</button>
+              </div>
+            </div>
+
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Notes / Package Details</label>
+            <input type="text" id="transitNotes" placeholder="e.g. 3 bundles wrapped in clear poly, Front chest panel batch #1"
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-cyan-600/30 transition transform active:scale-95">
+              <i data-lucide="send" class="w-4 h-4"></i>
+              <span>CREATE TRANSIT PASS & ASSIGN RUNNER</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Sub-Tab 2: Runner Pickup Queue -->
+      <div id="runner-sub-queue" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold">RUNNER QUEUE</span>
+              Pickups Awaiting Collection & In-Transit
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Runners confirm physical pickup on shop-floor tablet to start transit clock</p>
+          </div>
+          <button onclick="loadTransitsList()" class="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 font-semibold">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Queue
+          </button>
+        </div>
+
+        <div id="runnerQueueContainer" class="space-y-3">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Sub-Tab 3: Destination Handover & Count Verification -->
+      <div id="runner-sub-receive" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">HANDOVER</span>
+            Destination Physical Count Verification & Signoff
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Receiving supervisor counts pieces delivered by runner. Discrepancies immediately trigger alerts.</p>
+        </div>
+
+        <form id="transitReceiveForm" onsubmit="handleTransitReceive(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Select Arrived Transit Pass <span class="text-rose-400">*</span></label>
+              <select id="receiveTransitSelect" onchange="handleReceiveTransitSelect()" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-3 text-sm font-bold font-mono text-cyan-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <!-- In-transit items -->
+              </select>
+
+              <div id="receiveTransitCard" class="mt-3 bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs space-y-1 text-slate-300">
+                <div>Route: <strong id="receiveRoute" class="text-white">--</strong></div>
+                <div>Dispatched Count: <strong id="receiveDispatchedQty" class="text-cyan-400 text-sm font-black">-- pcs</strong></div>
+                <div>Dispatched By: <strong id="receiveDispatchedBy" class="text-slate-200">--</strong></div>
+                <div>Runner: <strong id="receiveRunner" class="text-slate-200">--</strong></div>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Actual Count Received (Pieces) <span class="text-rose-400">*</span></label>
+              <input type="number" id="receiveActualQty" required min="0" oninput="validateTransitCountMatch()" placeholder="e.g. 150"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-xl font-black text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              
+              <!-- Quick Match Button -->
+              <div class="flex items-center gap-2 mt-2">
+                <button type="button" onclick="fillExactMatchTransitQty()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-semibold text-slate-300">
+                  Exact Match
+                </button>
+              </div>
+
+              <!-- Live Match Status Banner -->
+              <div id="transitMatchStatus" class="mt-3 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-800 text-slate-400">
+                <i data-lucide="info" class="w-4 h-4"></i>
+                <span>Enter count to verify against dispatch.</span>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div id="discrepancyReasonWrapper" class="hidden">
+                <label class="block text-xs font-semibold uppercase text-rose-400 mb-1.5">Discrepancy Explanation <span class="text-rose-400">*</span></label>
+                <textarea id="receiveDiscrepancyReason" rows="2" placeholder="e.g. 2 cut panels soiled/dropped during transit by runner"
+                  class="w-full bg-slate-950 border border-rose-500/50 rounded-xl p-2.5 text-xs text-rose-200 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+              </div>
+
+              <div class="flex flex-col justify-end pt-2">
+                <button type="submit" id="btnConfirmHandover" class="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/30 transition transform active:scale-95">
+                  <i data-lucide="check-check" class="w-5 h-5"></i>
+                  <span>VERIFY COUNT & ACCEPT HANDOVER</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 3: CUTTING FLOOR & PALLA AVERAGE TELEMETRY -->
+    <!-- ======================================================== -->
+    <section id="view-cutting" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div class="border-b border-slate-800 pb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 text-xs font-bold">CUTTING ROOM</span>
+              Lay Telemetry & Master Palla Average Calculator
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Calculates actual lay consumption from sample palla weights and tracks size-wise cut counts against BOM budget</p>
+          </div>
+        </div>
+
+        <form id="cuttingLayForm" onsubmit="handleCuttingLaySubmit(event)" class="space-y-5">
+          <!-- Row 1: Order & Bundle -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="cuttingOrderSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none">
+                <!-- Orders -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Fabric Roll Used <span class="text-rose-400">*</span></label>
+              <select id="cuttingBundleSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-indigo-400 focus:outline-none">
+                <!-- Bundles -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Lay Length (Meters)</label>
+              <input type="number" step="0.1" id="cuttingLayLength" placeholder="e.g. 5.2"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Plies Count</label>
+              <input type="number" id="cuttingPlies" placeholder="e.g. 30"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Row 2: Master Palla Sample Calculator Card -->
+          <div class="bg-slate-950 border border-amber-500/30 rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+                <i data-lucide="scale" class="w-4 h-4"></i>
+                Marker Palla Average Sample Measurement
+              </h3>
+              <span class="text-[11px] text-slate-400">Cut test block of panels & weigh on digital scale</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Sample Palla Pieces <span class="text-amber-400">*</span></label>
+                <input type="number" id="cuttingSamplePcs" value="6" required oninput="calculatePallaAvg()"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Sample Palla Weight (kg) <span class="text-amber-400">*</span></label>
+                <input type="number" step="0.001" id="cuttingSampleWeight" value="1.260" required oninput="calculatePallaAvg()"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-amber-400 focus:outline-none">
+              </div>
+
+              <div class="bg-slate-900/90 rounded-xl p-3 border border-slate-800 flex flex-col justify-center">
+                <span class="text-[10px] text-slate-400 uppercase font-semibold">Calculated Palla Average</span>
+                <span id="calculatedPallaAvgDisplay" class="text-xl font-black text-emerald-400">0.2100 kg/pc</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: Size Breakdown Grid & Live Consumption Comparison -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white">Size-Wise Pieces Cut in this Lay</h3>
+              <div class="text-xs text-slate-400 font-semibold">Total Cut: <strong id="totalCutDisplay" class="text-indigo-400 text-sm">0 pcs</strong></div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XS</label>
+                <input type="number" min="0" id="cut_size_XS" value="0" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">S</label>
+                <input type="number" min="0" id="cut_size_S" value="30" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">M</label>
+                <input type="number" min="0" id="cut_size_M" value="50" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">L</label>
+                <input type="number" min="0" id="cut_size_L" value="50" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XL</label>
+                <input type="number" min="0" id="cut_size_XL" value="20" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">2XL</label>
+                <input type="number" min="0" id="cut_size_2XL" value="0" oninput="updateCuttingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+            </div>
+
+            <!-- Total Fabric Used & Live Yield Variance -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-800">
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Total Fabric Weight Used (kg) <span class="text-rose-400">*</span></label>
+                <input type="number" step="0.001" id="cuttingTotalFabricUsed" value="31.500" required oninput="updateCuttingTotals()"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-amber-400 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Planned BOM Target (kg/pc)</label>
+                <input type="number" step="0.001" id="cuttingTargetBom" value="0.220" oninput="updateCuttingTotals()"
+                  class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-300 focus:outline-none">
+              </div>
+
+              <div class="bg-slate-900 rounded-xl p-3 border border-slate-800 flex items-center justify-between">
+                <div>
+                  <span class="text-[10px] text-slate-400 uppercase font-semibold block">Yield Variance</span>
+                  <span id="cuttingVarianceDisplay" class="text-base font-black text-emerald-400">-4.5% (Yield Gain)</span>
+                </div>
+                <i id="cuttingVarianceIcon" data-lucide="check-circle" class="w-6 h-6 text-emerald-400"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-amber-600/30 transition transform active:scale-95">
+              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              <span>COMMIT CUTTING LAY & UPDATE ORDER MATRIX</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 4: BRANDING & SUBCONTRACTOR CHALLANS -->
+    <!-- ======================================================== -->
+    <section id="view-challan" class="hidden space-y-6">
+      
+      <!-- Sub-Navigation for Challan Station -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+        <button onclick="switchChallanSubTab('issue')" id="btn-sub-ch-issue" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 text-white transition">
+          1. Issue Challan to Vendor
+        </button>
+        <button onclick="switchChallanSubTab('receive')" id="btn-sub-ch-receive" class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition">
+          2. Receive Panels & Log Rejections
+        </button>
+      </div>
+
+      <!-- Sub-Tab 1: Issue Challan -->
+      <div id="challan-sub-issue" class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-pink-500/20 text-pink-400 border border-pink-500/30 text-xs font-bold">CHALLAN ISSUE</span>
+            Dispatch Cut Panels to Embellishment Contractor
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Generates gate pass for Screen Printing, Embroidery, DTF, or Heatseal job-workers</p>
+        </div>
+
+        <form id="challanIssueForm" onsubmit="handleChallanIssue(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="challanOrderSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                <!-- Orders -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Subcontractor Vendor <span class="text-rose-400">*</span></label>
+              <select id="challanVendorSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                <!-- Vendors -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Branding Process <span class="text-rose-400">*</span></label>
+              <select id="challanBrandingType" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="Embroidery">Embroidery</option>
+                <option value="Screen_Print">Screen Printing</option>
+                <option value="DTF">DTF Transfer</option>
+                <option value="Heatseal">Heatseal Logo</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Panel Description <span class="text-rose-400">*</span></label>
+              <select id="challanPanelName" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="Front_Chest">Front Chest Panel</option>
+                <option value="Back_Print">Back Panel</option>
+                <option value="Left_Sleeve">Left Sleeve Panel</option>
+                <option value="Collar_Embroidery">Collar Embroidery</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Quantity Sent (Pieces) <span class="text-rose-400">*</span></label>
+              <input type="number" id="challanQtySent" required min="1" placeholder="e.g. 150"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-pink-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Expected Return ETA <span class="text-rose-400">*</span></label>
+              <input type="date" id="challanExpectedEta" required
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-pink-600/30 transition">
+                <i data-lucide="send" class="w-4 h-4"></i>
+                DISPATCH CHALLAN TO VENDOR
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Sub-Tab 2: Receive Panels & Log Rejections -->
+      <div id="challan-sub-receive" class="hidden bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">RECEIPT</span>
+            Receive Goods Back & Audit Rejections
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Captures good counts, vendor defects (needle cut, print smudge, burn), and rework flags</p>
+        </div>
+
+        <form id="challanReceiveForm" onsubmit="handleChallanReceive(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Select Challan <span class="text-rose-400">*</span></label>
+              <select id="receiveChallanSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold font-mono text-pink-400 focus:outline-none">
+                <!-- Challans -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Good Quantity Received <span class="text-rose-400">*</span></label>
+              <input type="number" id="receiveGoodQty" required min="0" placeholder="e.g. 148"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-emerald-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Rejection Quantity</label>
+              <input type="number" id="receiveRejectionQty" value="0" min="0"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-black text-rose-400 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Reason for Rejection</label>
+              <input type="text" id="receiveRejectionReason" placeholder="e.g. Print smudge on white base, needle cuts"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Defect Photo URL / MinIO Reference</label>
+              <input type="text" id="receiveDefectPhoto" placeholder="e.g. https://minio/defects/ch-26001-01.jpg"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition transform active:scale-95">
+              <i data-lucide="check-check" class="w-5 h-5"></i>
+              <span>RECORD RECEIPT & REJECTIONS</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 5: STITCHING & FINISHING LINE TELEMETRY -->
+    <!-- ======================================================== -->
+    <section id="view-floor" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold">FLOOR TELEMETRY</span>
+            Daily Process Output & Quality Audit Station
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Rapid touch logging for Stitching, Thread Cutting (T/C), Kaaj, Buttoning, Ironing, and 100% Final QC</p>
+        </div>
+
+        <form id="processLogForm" onsubmit="handleProcessLogSubmit(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="procOrderSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                <!-- Orders -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Operation / Process Stage <span class="text-rose-400">*</span></label>
+              <select id="procNameSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-emerald-400 focus:outline-none">
+                <option value="Stitching">Stitching (Assembly Line)</option>
+                <option value="Thread_Cutting">Thread Cutting (T/C)</option>
+                <option value="Kaaj">Kaaj (Buttonhole)</option>
+                <option value="Button">Button Attachment</option>
+                <option value="Ironing">Ironing & Steam Press</option>
+                <option value="QC_Inspection">100% Final QC Inspection</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Station / Line ID</label>
+              <input type="text" id="procStationCode" value="LINE-1"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Tactile Count Steppers -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <!-- Completed -->
+            <div class="bg-slate-950 border border-emerald-500/30 rounded-2xl p-4 text-center space-y-2">
+              <span class="text-xs font-bold uppercase text-emerald-400 tracking-wider">Completed / Passed</span>
+              <input type="number" id="procCompletedQty" value="50" min="0" required
+                class="w-full text-center bg-transparent text-3xl font-black text-emerald-400 focus:outline-none">
+              <div class="flex justify-center gap-1.5 pt-1">
+                <button type="button" onclick="adjustProcQty('procCompletedQty', 5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+5</button>
+                <button type="button" onclick="adjustProcQty('procCompletedQty', 20)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+20</button>
+                <button type="button" onclick="adjustProcQty('procCompletedQty', 50)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+50</button>
+              </div>
+            </div>
+
+            <!-- Rejected -->
+            <div class="bg-slate-950 border border-rose-500/30 rounded-2xl p-4 text-center space-y-2">
+              <span class="text-xs font-bold uppercase text-rose-400 tracking-wider">Rejected</span>
+              <input type="number" id="procRejectedQty" value="0" min="0"
+                class="w-full text-center bg-transparent text-3xl font-black text-rose-400 focus:outline-none">
+              <div class="flex justify-center gap-1.5 pt-1">
+                <button type="button" onclick="adjustProcQty('procRejectedQty', 1)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+1</button>
+                <button type="button" onclick="adjustProcQty('procRejectedQty', 5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+5</button>
+              </div>
+            </div>
+
+            <!-- Rework -->
+            <div class="bg-slate-950 border border-amber-500/30 rounded-2xl p-4 text-center space-y-2">
+              <span class="text-xs font-bold uppercase text-amber-400 tracking-wider">Rework Required</span>
+              <input type="number" id="procReworkQty" value="0" min="0"
+                class="w-full text-center bg-transparent text-3xl font-black text-amber-400 focus:outline-none">
+              <div class="flex justify-center gap-1.5 pt-1">
+                <button type="button" onclick="adjustProcQty('procReworkQty', 1)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+1</button>
+                <button type="button" onclick="adjustProcQty('procReworkQty', 5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 rounded-lg text-xs font-bold">+5</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Defect Reason (If any rejections logged)</label>
+              <select id="procDefectCategory" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+                <option value="">None (Clean Batch)</option>
+                <option value="Needle_Hole">Needle Hole / Fabric Run</option>
+                <option value="Broken_Stitch">Broken Stitch / Skip Stitch</option>
+                <option value="Stitching_Pucker">Seam Puckering / Bad Tension</option>
+                <option value="Stain">Oil / Grease / Handling Stain</option>
+                <option value="Button_Loose">Loose Button / Placket Uneven</option>
+                <option value="Measurement_Off">Out of Tolerance Measurement</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Notes</label>
+              <input type="text" id="procRemarks" placeholder="e.g. Line 1 hourly batch 14:00"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-emerald-600/30 transition transform active:scale-95">
+              <i data-lucide="check" class="w-5 h-5"></i>
+              <span>COMMIT OPERATION TELEMETRY</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 6: CARTON PACKING MANIFEST -->
+    <!-- ======================================================== -->
+    <section id="view-packing" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 border border-violet-500/30 text-xs font-bold">PACKING ROOM</span>
+            Carton Packing Manifest & Size Breakdown
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Tightly balances packed pieces against order specifications and initiates dispatch transit passes</p>
+        </div>
+
+        <form id="cartonPackForm" onsubmit="handleCartonPackSubmit(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="packOrderSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none">
+                <!-- Orders -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Box Specification</label>
+              <select id="packBoxType" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="7-Ply Master Carton">7-Ply Master Carton (Standard 50 Pcs)</option>
+                <option value="5-Ply Export Carton">5-Ply Export Carton</option>
+                <option value="Custom Brand Outer Box">Custom Brand Outer Box</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Gross Weight (kg)</label>
+              <input type="number" step="0.01" id="packGrossWeight" placeholder="e.g. 11.45"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Size Breakdown in this Box -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase text-white">Size Breakdown in this Carton</span>
+              <span class="text-xs font-bold text-violet-400">Total in Box: <strong id="packTotalBoxPcs" class="text-base text-white">0</strong> pcs</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XS</label>
+                <input type="number" min="0" id="pack_size_XS" value="0" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">S</label>
+                <input type="number" min="0" id="pack_size_S" value="10" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">M</label>
+                <input type="number" min="0" id="pack_size_M" value="20" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">L</label>
+                <input type="number" min="0" id="pack_size_L" value="15" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">XL</label>
+                <input type="number" min="0" id="pack_size_XL" value="5" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-center text-xs font-bold text-slate-400 mb-1">2XL</label>
+                <input type="number" min="0" id="pack_size_2XL" value="0" oninput="updatePackingTotals()"
+                  class="w-full text-center bg-slate-900 border border-slate-700 rounded-xl py-2 font-bold text-white focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-violet-600/30 transition transform active:scale-95">
+              <i data-lucide="archive" class="w-5 h-5"></i>
+              <span>SEAL CARTON & LOG PACKING MANIFEST</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 7: RAW MATERIAL INWARD & ROLES (STATION 1) -->
+    <!-- ======================================================== -->
+    <section id="view-inward" class="hidden space-y-6">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-5">
+        <div class="border-b border-slate-800 pb-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-black text-white flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/30 text-xs font-bold">STATION 1</span>
+              Raw Material Inward & Multi-Component Dye Lots
+            </h2>
+            <p class="text-xs text-slate-400 mt-0.5">Captures Dye Lots (DDMMYY-A) ensuring matching shades for Body Fabric, Collar, Cuff, and Rib</p>
+          </div>
+          <button type="button" onclick="fetchNextParentCode()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs text-indigo-300 border border-slate-700 flex items-center gap-1.5 transition">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+            Auto-Next Dye Lot Code
+          </button>
+        </div>
+
+        <form id="inwardForm" onsubmit="handleInwardSubmit(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Parent Dye Lot <span class="text-amber-400">*</span></label>
+              <input type="text" id="inwardParentCode" required placeholder="e.g. 141026-A" 
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-teal-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Vendor <span class="text-rose-400">*</span></label>
+              <select id="inwardVendor" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Invoice No <span class="text-rose-400">*</span></label>
+              <input type="text" id="inwardInvoiceNo" required placeholder="e.g. INV-2026-904" 
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Material Type</label>
+              <select id="inwardType" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+                <option value="Fabric">Fabric (Knit/Woven)</option>
+                <option value="Collar">Collar Sets</option>
+                <option value="Cuff">Cuff Sets</option>
+                <option value="Rib">Rib Knit</option>
+                <option value="Zip">Zippers</option>
+                <option value="Label">Labels</option>
+                <option value="Trims">Trims / Eyelets</option>
+                <option value="Packaging">Packaging</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Fabric / Item Name <span class="text-rose-400">*</span></label>
+              <select id="inwardFabric" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Color Name <span class="text-rose-400">*</span></label>
+              <select id="inwardColor" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Invoice Weight (kg) <span class="text-rose-400">*</span></label>
+              <input type="number" step="0.001" id="inwardInvoiceQty" required placeholder="e.g. 50.000" 
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-amber-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Rate / Unit (₹)</label>
+              <input type="number" step="0.01" id="inwardRate" placeholder="e.g. 340.00" 
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-slate-200 focus:outline-none">
+            </div>
+          </div>
+
+          <!-- Dynamic Roll Table -->
+          <div class="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white uppercase">Physical Rolls Breakdown (01/N to N/N)</span>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-slate-400">Rolls:</span>
+                <input type="number" id="bundleCountInput" min="1" max="20" value="2" onchange="renderBundleRows()" 
+                  class="w-12 text-center bg-slate-900 border border-slate-700 rounded-lg text-sm font-bold text-teal-400 py-1">
+              </div>
+            </div>
+
+            <table class="w-full text-left text-xs">
+              <thead class="text-slate-400 uppercase bg-slate-900 rounded-lg">
+                <tr>
+                  <th class="py-2 px-3">Roll Code</th>
+                  <th class="py-2 px-3">Weight (kg)</th>
+                  <th class="py-2 px-3">GSM</th>
+                  <th class="py-2 px-3">Rack Bin</th>
+                </tr>
+              </thead>
+              <tbody id="bundleRowsBody" class="divide-y divide-slate-850"></tbody>
+            </table>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button type="submit" class="px-6 py-3 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 hover:from-teal-500 hover:to-emerald-500 text-white font-bold text-sm flex items-center gap-2 shadow-lg shadow-teal-600/30 transition transform active:scale-95">
+              <i data-lucide="check-circle" class="w-4 h-4"></i>
+              <span>COMMIT INWARD TO STOCK</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 8: MATERIAL ISSUE & RETURN (STATION 2 & 3) -->
+    <!-- ======================================================== -->
+    <section id="view-issue" class="hidden space-y-6">
+      
+      <!-- Issue Form -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-4">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-bold">ISSUE TO JOB</span>
+            Material Allocation to Cutting Floor
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Validates roll color against order requirement and debits warehouse stock</p>
+        </div>
+
+        <form id="issueForm" onsubmit="handleIssueSubmit(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Production Order <span class="text-rose-400">*</span></label>
+              <select id="issueOrderSelect" onchange="handleIssueOrderSelect()" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-white focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Fabric Roll <span class="text-rose-400">*</span></label>
+              <select id="issueBundleSelect" onchange="handleIssueBundleSelect()" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-indigo-400 focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Quantity to Issue (kg) <span class="text-rose-400">*</span></label>
+              <input type="number" step="0.001" id="issueQtyInput" required placeholder="e.g. 20.000"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-amber-400 focus:outline-none">
+            </div>
+          </div>
+
+          <div id="colorMatchNotice" class="hidden p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs flex items-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0"></i>
+            <span id="colorMatchText">Warning: Roll color does not match order requirement!</span>
+          </div>
+
+          <div class="flex justify-end pt-1">
+            <button type="submit" class="px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-rose-600/30 transition">
+              <i data-lucide="check" class="w-4 h-4"></i>
+              CONFIRM ISSUE TO CUTTING
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Return Form -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-md space-y-4">
+        <div>
+          <h2 class="text-base font-black text-white flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold">RETURN BALANCE</span>
+            Return Unconsumed Roll Balance from Cutting
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5">Weighs returned roll, automatically calculates net fabric consumed by job, and restores warehouse stock</p>
+        </div>
+
+        <form id="returnForm" onsubmit="handleReturnSubmit(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Select Roll <span class="text-rose-400">*</span></label>
+              <select id="returnBundleSelect" required class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-mono text-indigo-400 focus:outline-none"></select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold uppercase text-slate-300 mb-1.5">Returned Weight (kg) <span class="text-rose-400">*</span></label>
+              <input type="number" step="0.001" id="returnWeightInput" required placeholder="e.g. 5.200"
+                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm font-bold text-cyan-400 focus:outline-none">
+            </div>
+
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-600/30 transition">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                RESTORE STOCK & RECONCILE
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- VIEW 9: STOCK LEDGER AUDIT LOG -->
+    <!-- ======================================================== -->
+    <section id="view-ledger" class="hidden space-y-4">
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-md space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-black uppercase tracking-wider text-purple-400 flex items-center gap-2">
+              <i data-lucide="book-marked" class="w-4 h-4"></i>
+              Perpetual Double-Entry Stock Ledger
+            </h2>
+            <p class="text-xs text-slate-400">Strict immutable audit log of every gram of fabric moved on the shop floor</p>
+          </div>
+          <button onclick="loadStockLedger()" class="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-semibold">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+            Refresh Ledger
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="text-slate-400 uppercase bg-slate-950 rounded-xl">
+              <tr>
+                <th class="py-2.5 px-3">Date / Time</th>
+                <th class="py-2.5 px-3">Type</th>
+                <th class="py-2.5 px-3">Lot Code</th>
+                <th class="py-2.5 px-3">Roll Code</th>
+                <th class="py-2.5 px-3">Fabric</th>
+                <th class="py-2.5 px-3">Color</th>
+                <th class="py-2.5 px-3 text-emerald-400">In (+)</th>
+                <th class="py-2.5 px-3 text-rose-400">Out (-)</th>
+                <th class="py-2.5 px-3">Balance</th>
+                <th class="py-2.5 px-3">Job Ref</th>
+                <th class="py-2.5 px-3">Bin</th>
+              </tr>
+            </thead>
+            <tbody id="ledgerTableBody" class="divide-y divide-slate-850"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT LOGIC & TIGHT VALIDATION ENGINE -->
+  <!-- ======================================================== -->
+  <script>
+    // State Store
+    const appState = {
+      masters: { users: [], vendors: [], clients: [], fabrics: [], colors: [], orders: [] },
+      bundles: [],
+      transits: [],
+      challans: [],
+      radar: null,
+      audioEnabled: true
+    };
+
+    // Web Audio Synthesizer
+    let audioCtx = null;
+    function playAudio(type) {
+      if (!appState.audioEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'success') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880Hz crisp bell ping
+          gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.22);
+        } else if (type === 'warning' || type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, audioCtx.currentTime); // 220Hz low buzz
+          gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.35);
+        }
+      } catch (e) { console.warn(e); }
+    }
+
+    function toggleAudio() {
+      appState.audioEnabled = !appState.audioEnabled;
+      const icon = document.getElementById('soundIcon');
+      if (appState.audioEnabled) {
+        icon.classList.remove('text-slate-500');
+        icon.classList.add('text-emerald-400');
+        playAudio('success');
+      } else {
+        icon.classList.remove('text-emerald-400');
+        icon.classList.add('text-slate-500');
+      }
+    }
+
+    // Workstation Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('section[id^="view-"]').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white', 'shadow-md');
+        btn.classList.add('text-slate-300');
+      });
+
+      const activeView = document.getElementById(`view-${tabId}`);
+      const activeBtn = document.getElementById(`tab-${tabId}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-300');
+        activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-md');
+      }
+
+      if (tabId === 'radar') loadOperationsRadar();
+      if (tabId === 'runner') loadTransitsList();
+      if (tabId === 'cutting') { updateCuttingTotals(); calculatePallaAvg(); }
+      if (tabId === 'challan') loadChallansList();
+      if (tabId === 'inward') fetchNextParentCode();
+      if (tabId === 'issue') refreshIssueDropdowns();
+      if (tabId === 'ledger') loadStockLedger();
+    }
+
+    // Runner Sub-Tabs
+    function switchRunnerSubTab(subId) {
+      document.getElementById('runner-sub-dispatch').classList.toggle('hidden', subId !== 'dispatch');
+      document.getElementById('runner-sub-queue').classList.toggle('hidden', subId !== 'queue');
+      document.getElementById('runner-sub-receive').classList.toggle('hidden', subId !== 'receive');
+
+      document.getElementById('btn-sub-dispatch').className = subId === 'dispatch' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btn-sub-queue').className = subId === 'queue' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btn-sub-receive').className = subId === 'receive' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-cyan-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+
+      if (subId === 'queue' || subId === 'receive') loadTransitsList();
+    }
+
+    // Challan Sub-Tabs
+    function switchChallanSubTab(subId) {
+      document.getElementById('challan-sub-issue').classList.toggle('hidden', subId !== 'issue');
+      document.getElementById('challan-sub-receive').classList.toggle('hidden', subId !== 'receive');
+
+      document.getElementById('btn-sub-ch-issue').className = subId === 'issue' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+      document.getElementById('btn-sub-ch-receive').className = subId === 'receive' ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-pink-600 text-white transition' : 'px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:bg-slate-800 transition';
+
+      if (subId === 'receive') loadChallansList();
+    }
+
+    // Load All Masters
+    async function loadMasters() {
+      try {
+        const res = await fetch('/api/masters/all');
+        const json = await res.json();
+        if (json.success) {
+          appState.masters = json.data;
+          populateAllSelects();
+        }
+      } catch (e) { console.error('Masters load failed', e); }
+    }
+
+    function populateAllSelects() {
+      const { vendors, fabrics, colors, orders } = appState.masters;
+
+      // Populate order dropdowns
+      const orderOptions = orders.map(o => `<option value="${o.production_order_no}">${o.production_order_no} | ${o.client_name} - ${o.product_name} (${o.color_name}) [${o.total_qty} pcs]</option>`).join('');
+      ['transitOrderSelect', 'cuttingOrderSelect', 'challanOrderSelect', 'procOrderSelect', 'packOrderSelect', 'issueOrderSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = orderOptions;
+      });
+
+      // Populate vendors
+      const vendorOptions = vendors.map(v => `<option value="${v.id}">${v.name} (${v.contact_person || 'Vendor'})</option>`).join('');
+      ['inwardVendor', 'challanVendorSelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = vendorOptions;
+      });
+
+      // Populate fabrics & colors
+      const fSelect = document.getElementById('inwardFabric');
+      if (fSelect) fSelect.innerHTML = fabrics.map(f => `<option value="${f.fpcc_fab_name}">${f.fpcc_fab_name}</option>`).join('');
+
+      const cSelect = document.getElementById('inwardColor');
+      if (cSelect) cSelect.innerHTML = colors.map(c => `<option value="${c.color_name}">${c.color_name}</option>`).join('');
+
+      loadBundles();
+      renderBundleRows();
+    }
+
+    async function loadBundles() {
+      try {
+        const res = await fetch('/api/inventory/bundles');
+        const json = await res.json();
+        if (json.success) {
+          appState.bundles = json.data;
+          const bundleOptions = json.data.map(b => `<option value="${b.bundle_code}">${b.bundle_code} | ${b.fabric_name} - ${b.color_name} (Avail: ${b.available_qty} kg)</option>`).join('');
+          ['cuttingBundleSelect', 'issueBundleSelect', 'returnBundleSelect'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = bundleOptions;
+          });
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // ========================================================
+    // 1. OPERATIONS RADAR DATA
+    // ========================================================
+    async function loadOperationsRadar() {
+      try {
+        const res = await fetch('/api/operations/radar');
+        const json = await res.json();
+        if (json.success) {
+          appState.radar = json.data;
+          renderRadarView(json.data);
+        }
+      } catch (e) { console.error('Radar fetch failed', e); }
+    }
+
+    function renderRadarView(data) {
+      // 1. Order Stage Pipeline
+      const container = document.getElementById('radarOrdersContainer');
+      container.innerHTML = data.orders.map(o => {
+        const plan = o.planned_qty || 1;
+        const cutPct = Math.min(100, Math.round((o.cut_qty / plan) * 100));
+        const brandPct = Math.min(100, Math.round((o.branded_recd_qty / plan) * 100));
+        const stitchPct = Math.min(100, Math.round((o.stitched_qty / plan) * 100));
+        const qcPct = Math.min(100, Math.round((o.qc_passed_qty / plan) * 100));
+        const packPct = Math.min(100, Math.round((o.packed_qty / plan) * 100));
+
+        return `
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <span class="text-sm font-black text-white font-mono">${o.production_order_no}</span>
+                <span class="text-xs text-slate-300 ml-2 font-semibold">${o.client_name} - ${o.product_name}</span>
+                <span class="text-[11px] text-indigo-400 font-mono ml-1">(${o.color_name})</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">Planned: ${o.planned_qty} pcs</span>
+                <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 uppercase">${o.status}</span>
+              </div>
+            </div>
+
+            <!-- Stage Funnel Progress -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center text-[11px]">
+              <div class="bg-slate-900 rounded-lg p-2 border border-slate-800">
+                <span class="text-slate-400 block font-semibold">1. Cut</span>
+                <span class="text-sm font-black text-amber-400">${o.cut_qty} pcs</span>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                  <div class="bg-amber-400 h-full rounded-full" style="width: ${cutPct}%"></div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 rounded-lg p-2 border border-slate-800">
+                <span class="text-slate-400 block font-semibold">2. Branded</span>
+                <span class="text-sm font-black text-pink-400">${o.branded_recd_qty} pcs</span>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                  <div class="bg-pink-400 h-full rounded-full" style="width: ${brandPct}%"></div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 rounded-lg p-2 border border-slate-800">
+                <span class="text-slate-400 block font-semibold">3. Stitched</span>
+                <span class="text-sm font-black text-emerald-400">${o.stitched_qty} pcs</span>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                  <div class="bg-emerald-400 h-full rounded-full" style="width: ${stitchPct}%"></div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 rounded-lg p-2 border border-slate-800">
+                <span class="text-slate-400 block font-semibold">4. QC Passed</span>
+                <span class="text-sm font-black text-cyan-400">${o.qc_passed_qty} pcs</span>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                  <div class="bg-cyan-400 h-full rounded-full" style="width: ${qcPct}%"></div>
+                </div>
+              </div>
+
+              <div class="bg-slate-900 rounded-lg p-2 border border-slate-800">
+                <span class="text-slate-400 block font-semibold">5. Packed</span>
+                <span class="text-sm font-black text-violet-400">${o.packed_qty} pcs</span>
+                <div class="w-full bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                  <div class="bg-violet-400 h-full rounded-full" style="width: ${packPct}%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 2. Active Runner Transits
+      const transitsList = document.getElementById('radarActiveTransitsList');
+      document.getElementById('radarActiveTransitsCount').textContent = `${data.activeTransits.length} Active`;
+      if (data.activeTransits.length === 0) {
+        transitsList.innerHTML = '<p class="text-xs text-slate-500 py-3 text-center">No materials currently in transit between workstations.</p>';
+      } else {
+        transitsList.innerHTML = data.activeTransits.map(t => `
+          <div class="bg-slate-950 border border-cyan-500/30 rounded-xl p-3 flex items-center justify-between text-xs">
+            <div>
+              <div class="font-bold text-white font-mono">${t.transit_pass_no} &bull; ${t.production_order_no}</div>
+              <div class="text-slate-400 mt-0.5">${t.source_station} &rarr; <span class="text-cyan-400 font-semibold">${t.dest_station}</span></div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Runner: <strong class="text-slate-300">${t.runner_name}</strong></div>
+            </div>
+            <div class="text-right">
+              <span class="text-sm font-black text-cyan-400 font-mono">${t.dispatched_qty} pcs</span>
+              <span class="block px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 mt-1">${t.transit_status}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // 3. Discrepancies Banner
+      const banner = document.getElementById('radarDiscrepancyBanner');
+      if (data.flaggedDiscrepancies && data.flaggedDiscrepancies.length > 0) {
+        banner.classList.remove('hidden');
+        const disc = data.flaggedDiscrepancies[0];
+        document.getElementById('radarDiscrepancyText').textContent = 
+          `Transit ${disc.transit_pass_no}: ${disc.source_station} to ${disc.dest_station} - Missing ${disc.variance_qty} pcs (Reason: "${disc.discrepancy_reason}")`;
+      } else {
+        banner.classList.add('hidden');
+      }
+
+      // 4. Fabric Yield & Palla Variance
+      const yieldList = document.getElementById('radarYieldVarianceList');
+      if (data.cuttingVariances && data.cuttingVariances.length > 0) {
+        yieldList.innerHTML = data.cuttingVariances.map(v => {
+          const isGain = v.avg_variance_pct <= 0;
+          const badgeClass = isGain ? 'text-emerald-400 bg-emerald-500/15 border-emerald-500/30' : 'text-rose-400 bg-rose-500/15 border-rose-500/30';
+          const text = isGain ? `${Math.abs(v.avg_variance_pct)}% Yield Gain` : `+${v.avg_variance_pct}% Above Target`;
+          return `
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 flex items-center justify-between text-xs">
+              <div>
+                <span class="font-bold text-white font-mono">${v.production_order_no}</span>
+                <div class="text-slate-400 mt-0.5">Actual: <strong class="text-white">${v.avg_actual_consumption} kg/pc</strong> | Planned: ${v.bom_target} kg/pc</div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold border ${badgeClass}">${text}</span>
+            </div>
+          `;
+        }).join('');
+      } else {
+        yieldList.innerHTML = '<p class="text-xs text-slate-500 py-3 text-center">No cutting lay telemetry recorded yet.</p>';
+      }
+
+      lucide.createIcons();
+    }
+
+    // ========================================================
+    // 2. RUNNER LOGISTICS LOGIC
+    // ========================================================
+    function setTransitQty(val) {
+      document.getElementById('transitDispatchedQty').value = val;
+    }
+
+    async function handleTransitDispatch(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('transitOrderSelect').value;
+      const sourceStation = document.getElementById('transitSourceStation').value;
+      const destStation = document.getElementById('transitDestStation').value;
+      const itemType = document.getElementById('transitItemType').value;
+      const runnerId = document.getElementById('transitRunnerSelect').value;
+      const dispatchedQty = document.getElementById('transitDispatchedQty').value;
+      const notes = document.getElementById('transitNotes').value;
+
+      try {
+        const res = await fetch('/api/operations/transits/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, sourceStation, destStation, itemType,
+            runnerId, dispatchedQty, notes,
+            dispatchedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Transit Pass ${json.data.transitPassNo} Created! Assigned to runner.`);
+          switchRunnerSubTab('queue');
+          loadTransitsList();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(`Request failed: ${err.message}`);
+      }
+    }
+
+    async function loadTransitsList() {
+      try {
+        const res = await fetch('/api/operations/transits');
+        const json = await res.json();
+        if (json.success) {
+          appState.transits = json.data;
+          renderRunnerQueue(json.data);
+          populateReceiveTransitsSelect(json.data);
+
+          // Update navigation tab badge
+          const inMotionCount = json.data.filter(t => t.transit_status === 'DISPATCHED' || t.transit_status === 'IN_TRANSIT').length;
+          const badge = document.getElementById('activeTransitBadge');
+          if (inMotionCount > 0) {
+            badge.textContent = inMotionCount;
+            badge.classList.remove('hidden');
+          } else {
+            badge.classList.add('hidden');
+          }
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function renderRunnerQueue(transits) {
+      const container = document.getElementById('runnerQueueContainer');
+      const pending = transits.filter(t => t.transit_status === 'DISPATCHED' || t.transit_status === 'IN_TRANSIT');
+      if (pending.length === 0) {
+        container.innerHTML = '<p class="text-xs text-slate-500 py-4 text-center">All materials delivered! No pending transits in queue.</p>';
+        return;
+      }
+
+      container.innerHTML = pending.map(t => {
+        const isDispatched = t.transit_status === 'DISPATCHED';
+        const buttonAction = isDispatched
+          ? `<button onclick="confirmRunnerPickup('${t.transit_pass_no}')" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs flex items-center gap-1 shadow transition">
+               <i data-lucide="play" class="w-3.5 h-3.5"></i> Pickup & Start Transit
+             </button>`
+          : `<span class="px-3 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-400 font-bold text-xs border border-cyan-500/30 flex items-center gap-1">
+               <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span> In-Transit to Destination
+             </span>`;
+
+        return `
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono font-bold text-cyan-400">${t.transit_pass_no}</span>
+                <span class="text-xs text-white font-semibold">&bull; ${t.production_order_no}</span>
+                <span class="text-[11px] text-slate-400">(${t.item_type})</span>
+              </div>
+              <div class="text-xs text-slate-300 mt-1">From <strong class="text-white">${t.source_station}</strong> &rarr; To <strong class="text-cyan-400">${t.dest_station}</strong></div>
+              <div class="text-[11px] text-slate-500 mt-0.5">Assigned Runner: <strong class="text-slate-300">${t.runner_name}</strong> | Qty: <strong class="text-amber-400">${t.dispatched_qty} pcs</strong></div>
+            </div>
+            <div>${buttonAction}</div>
+          </div>
+        `;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    async function confirmRunnerPickup(transitPassNo) {
+      try {
+        const res = await fetch('/api/operations/transits/pickup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transitPassNo,
+            runnerId: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          loadTransitsList();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    function populateReceiveTransitsSelect(transits) {
+      const activeTransits = transits.filter(t => t.transit_status === 'IN_TRANSIT' || t.transit_status === 'DISPATCHED');
+      const select = document.getElementById('receiveTransitSelect');
+      if (activeTransits.length === 0) {
+        select.innerHTML = '<option value="">No transits currently awaiting handover</option>';
+        document.getElementById('receiveRoute').textContent = '--';
+        document.getElementById('receiveDispatchedQty').textContent = '-- pcs';
+      } else {
+        select.innerHTML = activeTransits.map(t => `
+          <option value="${t.transit_pass_no}">${t.transit_pass_no} | ${t.source_station} &rarr; ${t.dest_station} (${t.dispatched_qty} pcs)</option>
+        `).join('');
+        handleReceiveTransitSelect();
+      }
+    }
+
+    function handleReceiveTransitSelect() {
+      const passNo = document.getElementById('receiveTransitSelect').value;
+      const t = appState.transits.find(x => x.transit_pass_no === passNo);
+      if (t) {
+        document.getElementById('receiveRoute').textContent = `${t.source_station} to ${t.dest_station}`;
+        document.getElementById('receiveDispatchedQty').textContent = `${t.dispatched_qty} pcs`;
+        document.getElementById('receiveDispatchedBy').textContent = t.dispatched_by_name || 'Worker';
+        document.getElementById('receiveRunner').textContent = t.runner_name;
+        document.getElementById('receiveActualQty').value = '';
+        validateTransitCountMatch();
+      }
+    }
+
+    function fillExactMatchTransitQty() {
+      const passNo = document.getElementById('receiveTransitSelect').value;
+      const t = appState.transits.find(x => x.transit_pass_no === passNo);
+      if (t) {
+        document.getElementById('receiveActualQty').value = t.dispatched_qty;
+        validateTransitCountMatch();
+      }
+    }
+
+    function validateTransitCountMatch() {
+      const passNo = document.getElementById('receiveTransitSelect').value;
+      const t = appState.transits.find(x => x.transit_pass_no === passNo);
+      const inputEl = document.getElementById('receiveActualQty');
+      const statusEl = document.getElementById('transitMatchStatus');
+      const reasonWrapper = document.getElementById('discrepancyReasonWrapper');
+      const submitBtn = document.getElementById('btnConfirmHandover');
+
+      if (!t || inputEl.value === '') {
+        statusEl.className = 'mt-3 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-slate-800 text-slate-400';
+        statusEl.innerHTML = '<i data-lucide="info" class="w-4 h-4"></i><span>Enter count to verify against dispatch.</span>';
+        reasonWrapper.classList.add('hidden');
+        lucide.createIcons();
+        return;
+      }
+
+      const entered = parseInt(inputEl.value, 10);
+      const expected = t.dispatched_qty;
+
+      if (entered === expected) {
+        statusEl.className = 'mt-3 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400';
+        statusEl.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i><span>100% Exact Count Match. Custody transfer authorized.</span>';
+        reasonWrapper.classList.add('hidden');
+        document.getElementById('receiveDiscrepancyReason').required = false;
+      } else {
+        const diff = expected - entered;
+        const lossText = diff > 0 ? `Missing ${diff} pcs during transit!` : `Count overrun (+${Math.abs(diff)} pcs)!`;
+        statusEl.className = 'mt-3 p-2.5 rounded-xl text-xs font-bold flex items-center gap-2 bg-rose-500/15 border border-rose-500/30 text-rose-400';
+        statusEl.innerHTML = `<i data-lucide="alert-triangle" class="w-4 h-4 text-rose-400"></i><span>DISCREPANCY ALERT: ${lossText} Explanation required.</span>`;
+        reasonWrapper.classList.remove('hidden');
+        document.getElementById('receiveDiscrepancyReason').required = true;
+        playAudio('warning');
+      }
+      lucide.createIcons();
+    }
+
+    async function handleTransitReceive(e) {
+      e.preventDefault();
+      const transitPassNo = document.getElementById('receiveTransitSelect').value;
+      const receivedQty = parseInt(document.getElementById('receiveActualQty').value, 10);
+      const discrepancyReason = document.getElementById('receiveDiscrepancyReason').value;
+
+      try {
+        const res = await fetch('/api/operations/transits/receive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            transitPassNo, receivedQty, discrepancyReason,
+            receivedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Handover Verified! Material accepted into station stock.`);
+          switchRunnerSubTab('queue');
+          loadTransitsList();
+          loadOperationsRadar();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(`Request failed: ${err.message}`);
+      }
+    }
+
+    // ========================================================
+    // 3. CUTTING & PALLA AVERAGE LOGIC
+    // ========================================================
+    function calculatePallaAvg() {
+      const pcs = parseFloat(document.getElementById('cuttingSamplePcs').value) || 1;
+      const wt = parseFloat(document.getElementById('cuttingSampleWeight').value) || 0;
+      const avg = Number((wt / pcs).toFixed(4));
+      document.getElementById('calculatedPallaAvgDisplay').textContent = `${avg.toFixed(4)} kg/pc`;
+      updateCuttingTotals();
+    }
+
+    function updateCuttingTotals() {
+      let sum = 0;
+      ['XS', 'S', 'M', 'L', 'XL', '2XL'].forEach(sz => {
+        const val = parseInt(document.getElementById(`cut_size_${sz}`).value, 10) || 0;
+        sum += val;
+      });
+      document.getElementById('totalCutDisplay').textContent = `${sum} pcs`;
+
+      // Calculate consumption variance
+      const totalFabric = parseFloat(document.getElementById('cuttingTotalFabricUsed').value) || 0;
+      const plannedBom = parseFloat(document.getElementById('cuttingTargetBom').value) || 0.220;
+      if (sum > 0 && totalFabric > 0) {
+        const actual = totalFabric / sum;
+        const variance = (((actual - plannedBom) / plannedBom) * 100);
+        const display = document.getElementById('cuttingVarianceDisplay');
+        const icon = document.getElementById('cuttingVarianceIcon');
+
+        if (variance <= 0) {
+          display.className = 'text-base font-black text-emerald-400';
+          display.textContent = `${variance.toFixed(1)}% (Yield Gain)`;
+          icon.className = 'w-6 h-6 text-emerald-400';
+        } else {
+          display.className = 'text-base font-black text-rose-400';
+          display.textContent = `+${variance.toFixed(1)}% (Yield Loss)`;
+          icon.className = 'w-6 h-6 text-rose-400';
+        }
+      }
+    }
+
+    async function handleCuttingLaySubmit(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('cuttingOrderSelect').value;
+      const bundleCode = document.getElementById('cuttingBundleSelect').value;
+      const layLengthMeters = document.getElementById('cuttingLayLength').value;
+      const pliesCount = document.getElementById('cuttingPlies').value;
+      const samplePallaPcs = document.getElementById('cuttingSamplePcs').value;
+      const samplePallaWeightKg = document.getElementById('cuttingSampleWeight').value;
+      const totalFabricWeightUsedKg = document.getElementById('cuttingTotalFabricUsed').value;
+      const targetBomConsumption = document.getElementById('cuttingTargetBom').value;
+
+      const sizeBreakdown = {};
+      ['XS', 'S', 'M', 'L', 'XL', '2XL'].forEach(sz => {
+        const val = parseInt(document.getElementById(`cut_size_${sz}`).value, 10) || 0;
+        if (val > 0) sizeBreakdown[sz] = val;
+      });
+
+      try {
+        const res = await fetch('/api/operations/cutting/lay', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, bundleCode, layLengthMeters, pliesCount,
+            samplePallaPcs, samplePallaWeightKg, totalFabricWeightUsedKg,
+            sizeBreakdown, targetBomConsumption,
+            cutterId: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Cutting Lay ${json.data.cutJobNo} Logged! Palla Avg: ${json.data.pallaAverageKg} kg/pc.`);
+          loadOperationsRadar();
+          // Prompt for runner dispatch
+          if (confirm("Would you like to dispatch cut panels to Screen Print / Stitching with a runner now?")) {
+            switchTab('runner');
+            document.getElementById('transitDispatchedQty').value = json.data.totalPcsCut;
+          }
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(`Request failed: ${err.message}`);
+      }
+    }
+
+    // ========================================================
+    // 4. BRANDING & CHALLAN LOGIC
+    // ========================================================
+    async function loadChallansList() {
+      try {
+        const res = await fetch('/api/operations/challans');
+        const json = await res.json();
+        if (json.success) {
+          appState.challans = json.data;
+          const select = document.getElementById('receiveChallanSelect');
+          select.innerHTML = json.data.map(c => `<option value="${c.challan_no}">${c.challan_no} &bull; ${c.vendor_name} - ${c.panel_name} (${c.qty_sent} sent, ${c.status})</option>`).join('');
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    async function handleChallanIssue(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('challanOrderSelect').value;
+      const vendorId = document.getElementById('challanVendorSelect').value;
+      const brandingType = document.getElementById('challanBrandingType').value;
+      const panelName = document.getElementById('challanPanelName').value;
+      const qtySent = document.getElementById('challanQtySent').value;
+      const expectedEta = document.getElementById('challanExpectedEta').value;
+
+      try {
+        const res = await fetch('/api/operations/challans/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, vendorId, brandingType, panelName, qtySent, expectedEta,
+            createdBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Subcontractor Challan ${json.data.challanNo} Issued!`);
+          loadChallansList();
+          loadOperationsRadar();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(err.message);
+      }
+    }
+
+    async function handleChallanReceive(e) {
+      e.preventDefault();
+      const challanNo = document.getElementById('receiveChallanSelect').value;
+      const qtyReceived = document.getElementById('receiveGoodQty').value;
+      const rejectionQty = document.getElementById('receiveRejectionQty').value;
+      const rejectionReason = document.getElementById('receiveRejectionReason').value;
+      const defectPhotoUrl = document.getElementById('receiveDefectPhoto').value;
+
+      try {
+        const res = await fetch('/api/operations/challans/receive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challanNo, qtyReceived, rejectionQty, rejectionReason, defectPhotoUrl,
+            receivedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Challan Receipt Logged! Total Good: ${json.data.newReceivedTotal}, Total Rejected: ${json.data.totalRejections}.`);
+          loadOperationsRadar();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(err.message);
+      }
+    }
+
+    // ========================================================
+    // 5. STITCHING & FINISHING FLOOR TELEMETRY
+    // ========================================================
+    function adjustProcQty(fieldId, delta) {
+      const el = document.getElementById(fieldId);
+      let val = parseInt(el.value, 10) || 0;
+      el.value = Math.max(0, val + delta);
+    }
+
+    async function handleProcessLogSubmit(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('procOrderSelect').value;
+      const processName = document.getElementById('procNameSelect').value;
+      const stationCode = document.getElementById('procStationCode').value;
+      const completedQty = document.getElementById('procCompletedQty').value;
+      const rejectedQty = document.getElementById('procRejectedQty').value;
+      const reworkQty = document.getElementById('procReworkQty').value;
+      const defectCategory = document.getElementById('procDefectCategory').value;
+      const remarks = document.getElementById('procRemarks').value;
+
+      try {
+        const res = await fetch('/api/operations/process-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, processName, stationCode, completedQty,
+            rejectedQty, reworkQty, defectCategory, remarks,
+            operatorId: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ ${processName} Telemetry Logged! Completed: ${completedQty} pcs.`);
+          loadOperationsRadar();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(err.message);
+      }
+    }
+
+    // ========================================================
+    // 6. CARTON PACKING LOGIC
+    // ========================================================
+    function updatePackingTotals() {
+      let sum = 0;
+      ['XS', 'S', 'M', 'L', 'XL', '2XL'].forEach(sz => {
+        sum += (parseInt(document.getElementById(`pack_size_${sz}`).value, 10) || 0);
+      });
+      document.getElementById('packTotalBoxPcs').textContent = sum;
+    }
+
+    async function handleCartonPackSubmit(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('packOrderSelect').value;
+      const boxType = document.getElementById('packBoxType').value;
+      const grossWeightKg = document.getElementById('packGrossWeight').value;
+
+      const sizeBreakdown = {};
+      ['XS', 'S', 'M', 'L', 'XL', '2XL'].forEach(sz => {
+        const val = parseInt(document.getElementById(`pack_size_${sz}`).value, 10) || 0;
+        if (val > 0) sizeBreakdown[sz] = val;
+      });
+
+      try {
+        const res = await fetch('/api/operations/cartons/pack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, boxType, grossWeightKg, sizeBreakdown,
+            packedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Carton ${json.data.cartonNo} Sealed with ${json.data.totalPcs} pieces!`);
+          loadOperationsRadar();
+        } else {
+          playAudio('error');
+          alert(`Error: ${json.error}`);
+        }
+      } catch (err) {
+        playAudio('error');
+        alert(err.message);
+      }
+    }
+
+    // ========================================================
+    // 7. INWARD & STOCK LEDGER
+    // ========================================================
+    async function fetchNextParentCode() {
+      try {
+        const res = await fetch('/api/inventory/next-parent-code');
+        const json = await res.json();
+        if (json.success) {
+          document.getElementById('inwardParentCode').value = json.suggestedCode;
+          renderBundleRows();
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    function renderBundleRows() {
+      const code = document.getElementById('inwardParentCode').value.trim() || 'NEWLOT';
+      const count = parseInt(document.getElementById('bundleCountInput').value, 10) || 1;
+      const countPad = String(count).padStart(2, '0');
+      const tbody = document.getElementById('bundleRowsBody');
+      let html = '';
+      for (let i = 1; i <= count; i++) {
+        const seqPad = String(i).padStart(2, '0');
+        html += `
+          <tr class="hover:bg-slate-900">
+            <td class="py-2 px-3 font-mono text-teal-400 font-bold">${code}-${seqPad}/${countPad}</td>
+            <td class="py-2 px-3"><input type="number" step="0.001" name="roll_wt_${i}" value="25.000" class="w-24 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-sm font-bold text-amber-400"></td>
+            <td class="py-2 px-3"><input type="number" name="roll_gsm_${i}" value="200" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs"></td>
+            <td class="py-2 px-3"><input type="text" name="roll_loc_${i}" value="R1-B0${i}" class="w-20 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs font-mono text-cyan-400"></td>
+          </tr>
+        `;
+      }
+      tbody.innerHTML = html;
+    }
+
+    async function handleInwardSubmit(e) {
+      e.preventDefault();
+      const parentCode = document.getElementById('inwardParentCode').value.trim();
+      const vendorId = document.getElementById('inwardVendor').value;
+      const invoiceNo = document.getElementById('inwardInvoiceNo').value.trim();
+      const inwardType = document.getElementById('inwardType').value;
+      const fabricName = document.getElementById('inwardFabric').value;
+      const colorName = document.getElementById('inwardColor').value;
+      const invoiceQty = parseFloat(document.getElementById('inwardInvoiceQty').value);
+      const rate = parseFloat(document.getElementById('inwardRate').value) || null;
+      const count = parseInt(document.getElementById('bundleCountInput').value, 10) || 1;
+
+      const bundles = [];
+      for (let i = 1; i <= count; i++) {
+        bundles.push({
+          weight: parseFloat(document.querySelector(`input[name="roll_wt_${i}"]`).value) || 0,
+          gsm: parseFloat(document.querySelector(`input[name="roll_gsm_${i}"]`).value) || 200,
+          width: 60,
+          location: document.querySelector(`input[name="roll_loc_${i}"]`).value.trim() || 'R1-B01'
+        });
+      }
+
+      try {
+        const res = await fetch('/api/inventory/inward', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            parentCode, vendorId, invoiceNo, inwardType, fabricName, colorName,
+            invoiceQty, rate, bundles, performedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Inward Successful! Generated ${json.data.createdBundlesCount} rolls.`);
+          loadBundles();
+          fetchNextParentCode();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    // Material Issue / Return
+    async function refreshIssueDropdowns() {
+      await loadBundles();
+      handleIssueOrderSelect();
+      handleIssueBundleSelect();
+    }
+
+    function handleIssueOrderSelect() {
+      const orderNo = document.getElementById('issueOrderSelect').value;
+      const order = appState.masters.orders.find(o => o.production_order_no === orderNo);
+      checkColorMatch();
+    }
+
+    function handleIssueBundleSelect() {
+      const bundleCode = document.getElementById('issueBundleSelect').value;
+      const bundle = appState.bundles.find(b => b.bundle_code === bundleCode);
+      if (bundle) {
+        document.getElementById('issueQtyInput').value = bundle.available_qty;
+      }
+      checkColorMatch();
+    }
+
+    function checkColorMatch() {
+      const orderNo = document.getElementById('issueOrderSelect').value;
+      const bundleCode = document.getElementById('issueBundleSelect').value;
+      const order = appState.masters.orders.find(o => o.production_order_no === orderNo);
+      const bundle = appState.bundles.find(b => b.bundle_code === bundleCode);
+      const notice = document.getElementById('colorMatchNotice');
+      if (order && bundle && order.color_name.toLowerCase() !== bundle.color_name.toLowerCase()) {
+        notice.classList.remove('hidden');
+        document.getElementById('colorMatchText').textContent = `Dye Lot Warning: Roll color '${bundle.color_name}' does not match order requirement '${order.color_name}'!`;
+        playAudio('warning');
+      } else {
+        notice.classList.add('hidden');
+      }
+    }
+
+    async function handleIssueSubmit(e) {
+      e.preventDefault();
+      const productionOrderNo = document.getElementById('issueOrderSelect').value;
+      const bundleCode = document.getElementById('issueBundleSelect').value;
+      const issuedQty = parseFloat(document.getElementById('issueQtyInput').value);
+
+      try {
+        const res = await fetch('/api/inventory/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            productionOrderNo, bundleCode, issuedQty,
+            performedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Issue Confirmed! ${issuedQty} kg allocated to cutting.`);
+          loadBundles();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function handleReturnSubmit(e) {
+      e.preventDefault();
+      const bundleCode = document.getElementById('returnBundleSelect').value;
+      const returnQty = parseFloat(document.getElementById('returnWeightInput').value);
+
+      try {
+        const res = await fetch('/api/inventory/return', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bundleCode, returnQty,
+            performedBy: document.getElementById('activeUserSelect').value
+          })
+        });
+        const json = await res.json();
+        if (json.success) {
+          playAudio('success');
+          alert(`✓ Return Received! Stock balance updated to ${json.data.newAvailableStock} kg.`);
+          loadBundles();
+        } else {
+          playAudio('error');
+          alert(json.error);
+        }
+      } catch (err) { alert(err.message); }
+    }
+
+    async function loadStockLedger() {
+      try {
+        const res = await fetch('/api/inventory/ledger');
+        const json = await res.json();
+        if (json.success) {
+          const tbody = document.getElementById('ledgerTableBody');
+          tbody.innerHTML = json.data.map(tx => {
+            const isIn = tx.txn_type.includes('INWARD') || tx.txn_type.includes('RETURN');
+            const badge = isIn 
+              ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">${tx.txn_type}</span>`
+              : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">${tx.txn_type}</span>`;
+            return `
+              <tr class="hover:bg-slate-900">
+                <td class="py-2.5 px-3 text-slate-400 font-mono">${new Date(tx.txn_date).toLocaleTimeString()}</td>
+                <td class="py-2.5 px-3">${badge}</td>
+                <td class="py-2.5 px-3 font-mono text-cyan-400">${tx.parent_code}</td>
+                <td class="py-2.5 px-3 font-mono font-bold text-indigo-400">${tx.bundle_code || '-'}</td>
+                <td class="py-2.5 px-3 font-semibold text-white">${tx.item_name}</td>
+                <td class="py-2.5 px-3 text-slate-300">${tx.color_name}</td>
+                <td class="py-2.5 px-3 text-emerald-400 font-bold">${tx.qty_in > 0 ? `+${tx.qty_in.toFixed(3)}` : '-'}</td>
+                <td class="py-2.5 px-3 text-rose-400 font-bold">${tx.qty_out > 0 ? `-${tx.qty_out.toFixed(3)}` : '-'}</td>
+                <td class="py-2.5 px-3 text-white font-bold font-mono">${tx.balance_after.toFixed(3)}</td>
+                <td class="py-2.5 px-3 text-cyan-400 font-mono">${tx.production_order_no || '-'}</td>
+                <td class="py-2.5 px-3 font-mono text-slate-400">${tx.location_bin || '-'}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      } catch (e) { console.error(e); }
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      lucide.createIcons();
+      await loadMasters();
+      await loadOperationsRadar();
+      await loadTransitsList();
+    });
+  </script>
+</body>
+</html>
