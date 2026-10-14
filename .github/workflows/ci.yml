@@ -45,3 +45,7 @@ jobs:
       - name: Run Operational Flow Verification
         run: |
           python3 scripts/test_operations_flow.py
+
+      - name: Run CRM, Finance & WhatsApp ChatOps Verification
+        run: |
+          python3 scripts/test_crm_finance_whatsapp.py

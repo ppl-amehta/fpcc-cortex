@@ -12,7 +12,7 @@ import zipfile
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
-BASE_DIR = '/Users/arjavdmehta/fpcc'
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 DB_PATH = os.path.join(BASE_DIR, 'data', 'fpcc_cortex.db')
 SCHEMA_PATH = os.path.join(BASE_DIR, 'schema', 'schema.sql')
 EXCEL_FILE = os.path.join(BASE_DIR, 'APP SHEET FPCC_Inventory_System_Data (1).xlsx')
@@ -92,6 +92,11 @@ def ingest():
         ('usr-rohit', 'Rohit', 'rohit@firstpromotional.com', 'Packing Store', '6666', 1, 1, 1, 0, 0),
         ('usr-abhay', 'Abhay', 'abhaydixit2410@gmail.com', 'SuperAdmin', '7777', 1, 1, 1, 1, 1),
         ('usr-remon', 'Remon', 'remontoma84@gmail.com', 'SuperAdmin', '8888', 1, 1, 1, 1, 1),
+        ('usr-santosh', 'Santosh (Cutting Master)', 'santosh@fpcc.in', 'Cutting Master', '9901', 1, 1, 1, 0, 0),
+        ('usr-ramesh', 'Ramesh (Runner)', 'ramesh@fpcc.in', 'Runner', '9902', 1, 1, 1, 0, 0),
+        ('usr-mukesh', 'Mukesh (Runner)', 'mukesh@fpcc.in', 'Runner', '9903', 1, 1, 1, 0, 0),
+        ('usr-suresh', 'Suresh (Stitching Supervisor)', 'suresh@fpcc.in', 'Stitching Supervisor', '9904', 1, 1, 1, 0, 0),
+        ('usr-dilip', 'Dilip (Finishing & QC)', 'dilip@fpcc.in', 'Finishing & QC', '9905', 1, 1, 1, 0, 0),
     ]
     for u in default_users:
         cur.execute("""

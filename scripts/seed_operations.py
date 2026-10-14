@@ -7,8 +7,9 @@ Floor process logs (Stitching, T/C, Kaaj, Button, QC), and Carton packing.
 
 import sqlite3
 import json
+import os
 
-db_path = '/Users/arjavdmehta/fpcc/data/fpcc_cortex.db'
+db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'fpcc_cortex.db'))
 conn = sqlite3.connect(db_path)
 cur = conn.cursor()
 
