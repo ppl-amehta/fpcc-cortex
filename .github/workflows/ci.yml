@@ -17,7 +17,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: 'server/package-lock.json'
 
@@ -38,7 +38,9 @@ jobs:
 
       - name: Start Server in Background
         run: |
-          nohup node server/src/server.js > server.log 2>&1 &
+          cd server
+          nohup node src/server.js > ../server.log 2>&1 &
+          cd ..
           for i in {1..20}; do
             if curl -s http://localhost:3000/api/health | grep -q "ok"; then
               echo "Server is ready on port 3000!"
@@ -47,6 +49,11 @@ jobs:
             echo "Waiting for server to start... ($i/20)"
             sleep 1
           done
+          if ! curl -s http://localhost:3000/api/health | grep -q "ok"; then
+            echo "Server failed to start. Logs:"
+            cat server.log
+            exit 1
+          fi
 
       - name: Run Operational Flow Verification
         run: |
