@@ -24,6 +24,7 @@ build/
 
 # Tunnel logs
 *.log
+.live/
 
 # SQLite WAL & SHM
 data/*.db-wal
